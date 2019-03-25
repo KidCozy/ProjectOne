@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\ProjectOne.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{0D443514-6A1F-4023-82F5-D0A743EC599C}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\ProjectOne.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\ProjectOneEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <Filter Include="Config">
+      <UniqueIdentifier>{EB908C62-A783-4101-9E4E-234469631BD6}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEditorPerProjectUserSettings.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\ProjectOne">
+      <UniqueIdentifier>{8AEABC0F-DCCB-43E4-B4D2-D91FCCE6EA83}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\ProjectOne\ProjectOne.Build.cs">
+      <Filter>Source\ProjectOne</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\ProjectOne\ProjectOne.cpp">
+      <Filter>Source\ProjectOne</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\ProjectOne\ProjectOne.h">
+      <Filter>Source\ProjectOne</Filter>
+    </ClInclude>
+    <Filter Include="Source\ProjectOne\Environments">
+      <UniqueIdentifier>{534A0559-7541-4329-922C-077BC0B3F1AD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\ProjectOne\Environments\GameModes">
+      <UniqueIdentifier>{C5339565-1501-4063-A8B0-C364F89AE6E8}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ProjectOne\Environments\GameModes\ProjectOneGameMode.cpp">
+      <Filter>Source\ProjectOne\Environments\GameModes</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\ProjectOne\Environments\GameModes\ProjectOneGameMode.h">
+      <Filter>Source\ProjectOne\Environments\GameModes</Filter>
+    </ClInclude>
+    <Filter Include="Source\ProjectOne\Player">
+      <UniqueIdentifier>{040F3513-9B10-481B-9460-A2F8F17C1F61}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ProjectOne\Player\PlayerCharacter.cpp">
+      <Filter>Source\ProjectOne\Player</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\ProjectOne\Player\PlayerCharacter.h">
+      <Filter>Source\ProjectOne\Player</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\ProjectOne\Player\ProjectOneCharacter.cpp">
+      <Filter>Source\ProjectOne\Player</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\ProjectOne\Player\ProjectOneCharacter.h">
+      <Filter>Source\ProjectOne\Player</Filter>
+    </ClInclude>
+    <Filter Include="Source\ProjectOne\Player\Animation">
+      <UniqueIdentifier>{8BE90EDA-AD4F-4082-96DB-3808B0027DF0}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ProjectOne\Player\Animation\PlayerCharacterAnimInstance.cpp">
+      <Filter>Source\ProjectOne\Player\Animation</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\ProjectOne\Player\Animation\PlayerCharacterAnimInstance.h">
+      <Filter>Source\ProjectOne\Player\Animation</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
