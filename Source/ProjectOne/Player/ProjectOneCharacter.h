@@ -7,6 +7,14 @@
 #include "GameFramework/Character.h"
 #include "ProjectOneCharacter.generated.h"
 
+namespace evolution {
+	enum EVOL {
+		BABY,
+	};
+}
+
+using namespace evolution;
+
 UCLASS(config=Game)
 class AProjectOneCharacter : public ACharacter
 {
@@ -52,7 +60,7 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void TurnAtRate(float Rate);
-
+	
 	/**
 	 * Called via input to turn look up/down at a given rate. 
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
@@ -69,7 +77,14 @@ protected:
 	void AimLerp();
 
 	void Shot();
+	void Rebound(float tick);
+	void ReLoad();
 
+	void Evolution();
+	void Dead();
+	
+
+	FVector GetCharacterToAimeVec();
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -85,6 +100,19 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UPROPERTY()
-	class APistol * Pistol;
+	class AWeapon * Pistol;
+
+	UPROPERTY()
+	float Hp;
+
+	EVOL el;
+
+	void Hit(float Damage, AActor * Causer);
+
+private:
+	float timer = 0.1f;
+	float RandPitch = 0.0f;
+	float RandYaw = 0.0f;
+	bool bRebounding = false;
 };
 

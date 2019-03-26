@@ -4,12 +4,13 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Weapons/Pistol.h"
 #include "Camera/CameraComponent.h"
+#include "ProjectOne/Environments/GameModes/ProjectOneGameInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-
+#define RECOILTIME 0.2f
 //////////////////////////////////////////////////////////////////////////
 // AProjectOneCharacter
 
@@ -57,6 +58,7 @@ AProjectOneCharacter::AProjectOneCharacter()
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
@@ -72,6 +74,9 @@ AProjectOneCharacter::AProjectOneCharacter()
 	CameraBoom->CameraLagSpeed = 5.0f;
 	CameraBoom->CameraLagMaxDistance = 70.0f;
 	CameraBoom->CameraLagMaxTimeStep = 0.5f;
+
+	Hp = 100.0f;
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 	
@@ -93,6 +98,7 @@ void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 	PlayerInputComponent->BindAction("Shot", IE_Pressed, this, &AProjectOneCharacter::Shot);
 
+	PlayerInputComponent->BindAction("ReLoad", IE_Pressed, this, &AProjectOneCharacter::ReLoad);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AProjectOneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AProjectOneCharacter::MoveRight);
@@ -122,15 +128,20 @@ void AProjectOneCharacter::Tick(float delta) {
 		GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 60.0f, 0.1f));
 	else
 		GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 100.0f, 0.1f));
-
 	
+	if (bRebounding)
+		Rebound(delta);
 }
 
 void AProjectOneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Pistol = GetWorld()->SpawnActor<APistol>(FVector::ZeroVector, FRotator::ZeroRotator);
+	FVector SpawnPos(100.0f, 0.0f, 50.0f);
+
+	Pistol = GetWorld()->SpawnActor<AWeapon>(SpawnPos, FRotator::ZeroRotator);
+
+	Pistol->SetOwner(this);
 	FAttachmentTransformRules test(EAttachmentRule::KeepRelative, false);
 
 	Pistol->AttachToActor(GetWorld()->GetFirstPlayerController()->GetPawn(), test);
@@ -183,10 +194,45 @@ void AProjectOneCharacter::AimLerp()
 
 void AProjectOneCharacter::Shot()
 {
-	FVector direction;
-	
+	if (Pistol->NowBulletNum <= 0)
+		return;
+	Pistol->Shot(Pistol->GetActorLocation(), GetCharacterToAimeVec());
+	auto GameInstance = Cast<UProjectOneGameInstance>(GetGameInstance());
+	GameInstance->HitShake(GameInstance->CShakePistol, 1.0f);
 
-	Pistol->Shot(GetActorForwardVector());
+	//ReBounding
+	RandPitch = FMath::RandRange(0.3f, 0.6f);
+	RandYaw = FMath::RandRange(-0.1f, 0.1f);
+	bRebounding = true;
+	timer = RECOILTIME;
+
+}
+
+void AProjectOneCharacter::ReLoad()
+{
+	Pistol->ReLoad();
+}
+
+void AProjectOneCharacter::Hit(float Damage,AActor * Causer)
+{
+	if (Hp - Damage <= 0) {
+		Hp = 0;
+		auto CauserPlayer = Cast<AProjectOneCharacter>(Causer);
+		CauserPlayer->Evolution();
+		Dead();
+	}
+	else
+		Hp = Hp - Damage;
+}
+
+void AProjectOneCharacter::Evolution()
+{
+	SetActorScale3D(FVector(2.0f, 2.0f, 2.0f));
+}
+
+void AProjectOneCharacter::Dead()
+{
+	ABLOG_S(Warning);
 }
 
 
@@ -236,4 +282,48 @@ void AProjectOneCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+FVector AProjectOneCharacter::GetCharacterToAimeVec()
+{
+
+	FHitResult OutHit;
+	FVector CameraForwardVector = FollowCamera->GetComponentRotation().Vector();
+	FVector AimeStart = (CameraForwardVector*200.0f) + FollowCamera->GetComponentLocation();
+	FVector AimEnd = (CameraForwardVector*3000.0f) + AimeStart;
+	FCollisionQueryParams CameraCollisionParams;
+
+	FVector tmpVec = AimEnd;
+
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, AimeStart, AimEnd, ECC_Visibility, CameraCollisionParams)) {
+		tmpVec = OutHit.ImpactPoint;
+	}
+	FVector reVal = tmpVec - Pistol->GetActorLocation();
+
+	return reVal.GetSafeNormal();
+}
+
+void AProjectOneCharacter::Rebound(float tick)
+{
+	float PitchVal;
+	float YawVal;
+	timer -= tick;
+	if (timer > RECOILTIME * 0.5f) {
+		PitchVal = -FMath::FInterpConstantTo(0.0f, RandPitch, tick, 20.0f);
+		YawVal = -FMath::FInterpConstantTo(0.0f, RandYaw, tick, 20.0f);
+
+	}
+	else if (timer > 0.0f) {
+		PitchVal = FMath::FInterpConstantTo(0.0f, RandPitch, tick, 20.0f);
+		YawVal = FMath::FInterpConstantTo(0.0f, RandYaw, tick, 20.0f);
+	}
+	else {
+		bRebounding = false;
+		timer = RECOILTIME;
+		PitchVal = 0.0f;
+		YawVal = 0.0f;
+	}
+	AddControllerPitchInput(PitchVal);
+	AddControllerYawInput(YawVal);
+
 }

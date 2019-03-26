@@ -7,27 +7,35 @@
 #include "Pistol.generated.h"
 
 UCLASS()
-class PROJECTONE_API APistol : public AActor
+class PROJECTONE_API AWeapon : public AActor
 {
+
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	APistol();
+	AWeapon();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY()
-	class ABullet * Bullet;
 
-	void Shot(FVector direction);
+	void Shot(FVector SpawnPos,FVector Direction);
+
+	void ReLoad();
 
 	UPROPERTY(VisibleAnywhere, Category = Mesh)
 	UStaticMeshComponent * Mesh;
+
+	UPROPERTY()
+	int NowBulletNum;
+	
+	UPROPERTY()
+	int MaxBulletNum;
 };

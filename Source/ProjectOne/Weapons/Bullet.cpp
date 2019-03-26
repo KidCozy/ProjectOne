@@ -15,6 +15,8 @@ ABullet::ABullet()
 
 	Col->SetupAttachment(RootComponent);
 
+
+
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> PJ_Mesh(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	if (PJ_Mesh.Succeeded())
 	{
@@ -26,6 +28,16 @@ ABullet::ABullet()
 	Speed = 10.0f;
 
 	DirectionVector = GetActorForwardVector();
+	SetActorScale3D(FVector(0.1f, 0.1f, 0.1f));
+
+	Mesh->SetGenerateOverlapEvents(false);
+	
+}
+
+void ABullet::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	Col->OnComponentBeginOverlap.AddDynamic(this, &ABullet::OnCollisionOverlap);
 }
 
 // Called every frame
@@ -37,6 +49,14 @@ void ABullet::Tick(float DeltaTime)
 
 void ABullet::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OherCcomp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	ABLOG_S(Warning);
+	ABLOG(Warning, TEXT("Owner : %s"), *(GetOwner()->GetName()));
+	ABLOG(Warning, TEXT("OtherActor : %s"), *(OtherActor->GetName()));
+
+	ABCHECK(IsValid(Cast<AProjectOneCharacter>(OtherActor)));
+	auto Character = Cast<AProjectOneCharacter>(OtherActor);
+	Character->Hit(20.0f, GetOwner());
+
 	Destroy(this);
 }
 

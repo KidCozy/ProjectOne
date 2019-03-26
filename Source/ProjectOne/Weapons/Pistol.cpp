@@ -4,7 +4,7 @@
 #include "Bullet.h"
 
 // Sets default values
-APistol::APistol()
+AWeapon::AWeapon()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -12,25 +12,46 @@ APistol::APistol()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 
 	SetRootComponent(Mesh);
+
+	MaxBulletNum = 8;
+	NowBulletNum = 8;
 }
 
 // Called when the game starts or when spawned
-void APistol::BeginPlay()
+void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
 // Called every frame
-void APistol::Tick(float DeltaTime)
+void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-void APistol::Shot(FVector direction)
+
+
+void AWeapon::Shot(FVector SpawnPos, FVector Direction)
 {
-	Bullet = GetWorld()->SpawnActor<ABullet>(GetActorLocation(), FRotator::ZeroRotator);
-	Bullet->SetDirection(direction);
+	if (NowBulletNum > 0) {
+
+		auto Bullet = GetWorld()->SpawnActor<ABullet>(SpawnPos, FRotator::ZeroRotator);
+		if (Bullet != NULL) {
+			Bullet->SetDirection(Direction);
+			Bullet->Speed = 40.0f;
+			Bullet->SetOwner(GetOwner());
+		}
+		NowBulletNum--;
+	}
+
+
 }
+
+void AWeapon::ReLoad()
+{
+	NowBulletNum = MaxBulletNum;
+}
+
 
