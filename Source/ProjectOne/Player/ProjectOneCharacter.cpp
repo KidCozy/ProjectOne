@@ -2,6 +2,7 @@
 
 #include "ProjectOneCharacter.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Weapons/Pistol.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -14,11 +15,19 @@
 
 void AProjectOneCharacter::PostInitializeComponents() {
 	Super::PostInitializeComponents();
+	
 	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+
+
 }
+
+
 
 AProjectOneCharacter::AProjectOneCharacter()
 {
+
+
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -34,8 +43,8 @@ AProjectOneCharacter::AProjectOneCharacter()
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
-	GetCharacterMovement()->bOrientRotationToMovement = false; // Character moves in the direction of input...	
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
@@ -65,6 +74,8 @@ AProjectOneCharacter::AProjectOneCharacter()
 	CameraBoom->CameraLagMaxTimeStep = 0.5f;
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+	
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -79,6 +90,8 @@ void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 	PlayerInputComponent->BindAction("Aim",IE_Pressed, this, &AProjectOneCharacter::Aim);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AProjectOneCharacter::Aim);
+
+	PlayerInputComponent->BindAction("Shot", IE_Pressed, this, &AProjectOneCharacter::Shot);
 
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AProjectOneCharacter::MoveForward);
@@ -103,6 +116,26 @@ void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 }
 
 
+void AProjectOneCharacter::Tick(float delta) {
+	Super::Tick(delta);
+	if(APAnim->isAim)
+		GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 60.0f, 0.1f));
+	else
+		GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 100.0f, 0.1f));
+
+	
+}
+
+void AProjectOneCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	Pistol = GetWorld()->SpawnActor<APistol>(FVector::ZeroVector, FRotator::ZeroRotator);
+	FAttachmentTransformRules test(EAttachmentRule::KeepRelative, false);
+
+	Pistol->AttachToActor(GetWorld()->GetFirstPlayerController()->GetPawn(), test);
+}
+
 void AProjectOneCharacter::OnResetVR()
 {
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
@@ -120,21 +153,50 @@ void AProjectOneCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector L
 
 void AProjectOneCharacter::Aim()
 {
+	FTimerHandle time_;
+
 	if (!APAnim->isAim) {
 		APAnim->isAim = true;
+
+
 		GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
 	}
 	else {
 		APAnim->isAim = false;
 		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true; 
 	}
+
+	//GetWorld()->GetTimerManager().SetTimer(time_, this, &AProjectOneCharacter::AimLerp, 50.0f, true, 1.0f);
 }
+void AProjectOneCharacter::AimLerp()
+{
+		if(APAnim->isAim)
+			GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 60.0f, 0.1f));
+		else
+			GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 100.0f, 0.1f));
+
+}
+
+void AProjectOneCharacter::Shot()
+{
+	FVector direction;
+	
+
+	Pistol->Shot(GetActorForwardVector());
+}
+
 
 void AProjectOneCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+
+
+
 }
 
 void AProjectOneCharacter::LookUpAtRate(float Rate)

@@ -34,7 +34,7 @@ public:
 	float BaseLookUpRate;
 
 	UPROPERTY(VisibleAnywhere)
-		class UPlayerCharacterAnimInstance* APAnim;
+	class UPlayerCharacterAnimInstance* APAnim;
 
 protected:
 
@@ -66,11 +66,16 @@ protected:
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
 	void Aim();
+	void AimLerp();
+
+	void Shot();
 
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
+	virtual void Tick(float delta) override;
+	virtual void BeginPlay() override;
 	// End of APawn interface
 
 public:
@@ -78,5 +83,8 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	UPROPERTY()
+	class APistol * Pistol;
 };
 
