@@ -31,7 +31,6 @@ ABullet::ABullet()
 	SetActorScale3D(FVector(0.1f, 0.1f, 0.1f));
 
 	Mesh->SetGenerateOverlapEvents(false);
-	
 }
 
 void ABullet::PostInitializeComponents()

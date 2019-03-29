@@ -24,6 +24,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		bool isAim;
 
-	UPlayerCharacterAnimInstance();
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool isCrouch;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool isRoll;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool isInAir;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly)
+	UAnimMontage* RollMontage;
+
+	UPlayerCharacterAnimInstance();
+private:
+	UFUNCTION()
+	void AnimNotify_RollEnd();
+
+	UFUNCTION()
+	void AnimNotify_JumpEnd();
 };

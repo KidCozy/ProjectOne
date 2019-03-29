@@ -9,7 +9,6 @@
 UCLASS()
 class PROJECTONE_API AWeapon : public AActor
 {
-
 	GENERATED_BODY()
 	
 public:	
@@ -20,13 +19,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 
-	void Shot(FVector SpawnPos,FVector Direction);
+	void Shot(FVector SpawnPos, FVector Direction);
 
 	void ReLoad();
 
@@ -35,7 +33,23 @@ public:
 
 	UPROPERTY()
 	int NowBulletNum;
-	
+
 	UPROPERTY()
 	int MaxBulletNum;
+
+	UPROPERTY()
+	float RealoadDelay;
+
+	UPROPERTY()
+	float IntervalTime;
+
+	UPROPERTY()
+	float Range;
+
+	UPROPERTY(EditAnywhere)
+	float VerticalRecoil;
+
+	UPROPERTY(EditAnywhere)
+	float HorizonRecoil;
+
 };

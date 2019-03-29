@@ -7,14 +7,6 @@
 #include "GameFramework/Character.h"
 #include "ProjectOneCharacter.generated.h"
 
-namespace evolution {
-	enum EVOL {
-		BABY,
-	};
-}
-
-using namespace evolution;
-
 UCLASS(config=Game)
 class AProjectOneCharacter : public ACharacter
 {
@@ -28,63 +20,74 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 		class USpringArmComponent* CameraBoom;
 
-	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 		class UCameraComponent* FollowCamera;
 
-
-	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseTurnRate;
+		float BaseTurnRate;
 
-	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseLookUpRate;
-
-	UPROPERTY(VisibleAnywhere)
-	class UPlayerCharacterAnimInstance* APAnim;
-
-protected:
-
-	/** Resets HMD orientation in VR. */
-	void OnResetVR();
-
-	/** Called for forwards/backward input */
-	void MoveForward(float Value);
-
-	/** Called for side to side input */
-	void MoveRight(float Value);
-
-	/** 
-	 * Called via input to turn at a given rate. 
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	void TurnAtRate(float Rate);
+		float BaseLookUpRate;
 	
-	/**
-	 * Called via input to turn look up/down at a given rate. 
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	void LookUpAtRate(float Rate);
+	UPROPERTY()
+	class AWeapon * Pistol;
 
-	/** Handler for when a touch input begins. */
+	UPROPERTY()
+	float Hp;
+
+	void Hit(float Damage, AActor * Causer);
+
+protected: // protected 함수 영역
+
+	// 진입점, 초기화
+	void SetResources(); // 리소스 로드 (초기화)
+
+	// 아무 쓸모없는 VR코드
+	void OnResetVR();
 	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
-
-	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
+	// 조작 함수
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	void TurnAtRate(float Rate);
+	void LookUpAtRate(float Rate);
+	void DoCrouch();
+
+	// 액션 함수
 	void Aim();
 	void AimLerp();
-
 	void Shot();
-	void Rebound(float tick);
-	void ReLoad();
+	void Roll();
+	void MoveReleased();
+	void JumpInput();
 
-	void Evolution();
-	void Dead();
+	// 화면FX
+	void PlayCShake(int Index);
 	
+	void Shooting(float tick);
 
+	void ReLoad();
+	void Evolution();
+	void Rebound();
+	void Dead();
 	FVector GetCharacterToAimeVec();
+protected: // protected 자원 영역
+	
+	// 전역
+	const UWorld* const World = GetWorld(); 
+
+	APlayerController* PlayerController;
+
+	UPROPERTY(VisibleAnywhere)
+		class UPlayerCharacterAnimInstance* APAnim;
+
+	UPROPERTY(VisibleAnywhere)
+		TArray<TSubclassOf<UCameraShake>> CShakeList;
+
+	bool isShooting;
+
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -94,25 +97,12 @@ protected:
 	// End of APawn interface
 
 public:
-	/** Returns CameraBoom subobject **/
+
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	UPROPERTY()
-	class AWeapon * Pistol;
-
-	UPROPERTY()
-	float Hp;
-
-	EVOL el;
-
-	void Hit(float Damage, AActor * Causer);
-
 private:
-	float timer = 0.1f;
-	float RandPitch = 0.0f;
-	float RandYaw = 0.0f;
-	bool bRebounding = false;
+	float intervalTime = 0.0f;
+	FVector InputVector;
 };
 

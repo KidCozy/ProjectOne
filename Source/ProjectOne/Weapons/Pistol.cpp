@@ -6,15 +6,19 @@
 // Sets default values
 AWeapon::AWeapon()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 
 	SetRootComponent(Mesh);
 
-	MaxBulletNum = 8;
-	NowBulletNum = 8;
+	MaxBulletNum = 100;
+	NowBulletNum = 100;
+	IntervalTime = 0.06f;
+	Range = 100.0f;
+	VerticalRecoil = 0.15f;
+	HorizonRecoil = 0.1f;
 }
 
 // Called when the game starts or when spawned
@@ -31,8 +35,6 @@ void AWeapon::Tick(float DeltaTime)
 
 }
 
-
-
 void AWeapon::Shot(FVector SpawnPos, FVector Direction)
 {
 	if (NowBulletNum > 0) {
@@ -45,13 +47,10 @@ void AWeapon::Shot(FVector SpawnPos, FVector Direction)
 		}
 		NowBulletNum--;
 	}
-
-
 }
+
 
 void AWeapon::ReLoad()
 {
 	NowBulletNum = MaxBulletNum;
 }
-
-
