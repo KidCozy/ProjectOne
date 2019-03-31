@@ -14,19 +14,29 @@
 
 void AProjectOneCharacter::PostInitializeComponents() {
 	Super::PostInitializeComponents();
-	
 	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
-	//Controller = GetController();
-	//PlayerController = World->GetFirstPlayerController();
 }
 
 // *** 리소스 로드 (초기화) ***
 void AProjectOneCharacter::SetResources() {
 	static ConstructorHelpers::FClassFinder<UCameraShake> CSHAKE_FIRE(TEXT("Blueprint'/Game/ScreenFX/CShake_Fire.CShake_Fire_C'"));
-	
 	if (CSHAKE_FIRE.Succeeded())
 		CShakeList.Add(CSHAKE_FIRE.Class);
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_MANEQUIN(TEXT("SkeletalMesh'/Game/Animations/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
+	if (SK_MANEQUIN.Succeeded())
+		GetMesh()->SetSkeletalMesh(SK_MANEQUIN.Object);
+
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -90.0f), FRotator(0.0f, -90.0f, 0.0f));
+
+	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/AnimationBlueprint/PlayerCharacter_AnimBP.PlayerCharacter_AnimBP_C'"));
+	if (TEMP_ANIM.Succeeded())
+		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
 }
+
+void AProjectOneCharacter::SetInitWeapone()
+{
+}
+
 
 AProjectOneCharacter::AProjectOneCharacter()
 {
@@ -65,15 +75,16 @@ AProjectOneCharacter::AProjectOneCharacter()
 
 
 	CameraBoom->TargetArmLength = 350.0f;
-	CameraBoom->SocketOffset = FVector(40.0f, 100.0f, 60.0f);
-
+	CameraBoom->SocketOffset = FVector(40.0f, 50.0f, 60.0f);
+/*
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->bUseCameraLagSubstepping = true;
 	CameraBoom->bDrawDebugLagMarkers = true;
 
 	CameraBoom->CameraLagSpeed = 5.0f;
 	CameraBoom->CameraLagMaxDistance = 70.0f;
-	CameraBoom->CameraLagMaxTimeStep = 0.5f;
+	CameraBoom->CameraLagMaxTimeStep = 0.5f;*/
+
 	InputVector = FVector::ZeroVector;
 	Hp = 100.0f;
 
@@ -83,18 +94,16 @@ void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 {
 	check(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Aim",IE_Pressed, this, &AProjectOneCharacter::Aim);
-	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AProjectOneCharacter::Aim);
-
 	PlayerInputComponent->BindAction("Shot", IE_Pressed, this, &AProjectOneCharacter::Shot);
 	PlayerInputComponent->BindAction("Shot", IE_Released, this, &AProjectOneCharacter::Shot);
 
 	PlayerInputComponent->BindAction("ReLoad", IE_Pressed, this, &AProjectOneCharacter::ReLoad);
 
 
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProjectOneCharacter::DoCrouch);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AProjectOneCharacter::DoCrouch);
-
+	PlayerInputComponent->BindAction("Forward", IE_DoubleClick, this, &AProjectOneCharacter::ForwardDash);
+	PlayerInputComponent->BindAction("Back", IE_DoubleClick, this, &AProjectOneCharacter::BackDash);
+	PlayerInputComponent->BindAction("Left", IE_DoubleClick, this, &AProjectOneCharacter::LeftDash);
+	PlayerInputComponent->BindAction("Right", IE_DoubleClick, this, &AProjectOneCharacter::RightDash);
 	PlayerInputComponent->BindAction("MoveInput", IE_Released, this, &AProjectOneCharacter::MoveReleased);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AProjectOneCharacter::MoveForward);
@@ -118,12 +127,6 @@ void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 void AProjectOneCharacter::Tick(float delta) {
 	Super::Tick(delta);
-	if (APAnim->isAim) {
-		GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 40.0f, 0.1f));
-	}
-	else {
-		GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 100.0f, 0.1f));
-	}
 	Shooting(delta);
 }
 
@@ -131,12 +134,12 @@ void AProjectOneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	FVector SpawnPos(100.0f, 0.0f, 50.0f);
-	Pistol = GetWorld()->SpawnActor<AWeapon>(SpawnPos, FRotator::ZeroRotator);
+	Weapone = GetWorld()->SpawnActor<AWeapon>(SpawnPos, FRotator::ZeroRotator);
 	FAttachmentTransformRules test(EAttachmentRule::KeepRelative, false);
-	Pistol->SetOwner(this);
-	Pistol->AttachToActor(GetWorld()->GetFirstPlayerController()->GetPawn(), test);
+	Weapone->SetOwner(this);
+	Weapone->AttachToActor(this, test);
+	SetInitWeapone();
 }
-
 
 
 void AProjectOneCharacter::OnResetVR()
@@ -154,54 +157,23 @@ void AProjectOneCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector L
 		StopJumping();
 }
 
-void AProjectOneCharacter::Aim()
-{
-	FTimerHandle time_;
-
-	if (!APAnim->isAim) {
-		APAnim->isAim = true;
-		GetCharacterMovement()->MaxWalkSpeed = 300.0f;
-		GetCharacterMovement()->bUseControllerDesiredRotation = true;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		CameraBoom->bEnableCameraLag = false;
-	}
-	else {
-		APAnim->isAim = false;
-		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-		GetCharacterMovement()->bUseControllerDesiredRotation = false;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
-		CameraBoom->bEnableCameraLag = true;
-	}
-
-	//GetWorld()->GetTimerManager().SetTimer(time_, this, &AProjectOneCharacter::AimLerp, 50.0f, true, 1.0f);
-}
-void AProjectOneCharacter::AimLerp()
-{
-		if(APAnim->isAim)
-			GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 60.0f, 0.1f));
-		else
-			GetFollowCamera()->SetFieldOfView(FMath::Lerp(GetFollowCamera()->FieldOfView, 100.0f, 0.1f));
-
-}
-
 void AProjectOneCharacter::Shot()
 {
-	GetCapsuleComponent()->SetRelativeRotation(FRotator(0.0f, FollowCamera->GetComponentRotation().Yaw, 0.0f));
-
-
 	if (!isShooting) {
-		GetCharacterMovement()->bUseControllerDesiredRotation = true;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		GetCharacterMovement()->MaxWalkSpeed = 450.0f;
-		intervalTime = Pistol->IntervalTime;
+		if (!APAnim->Montage_IsPlaying(APAnim->RollMontage)) {
+			GetCapsuleComponent()->SetRelativeRotation(FRotator(0.0f, FollowCamera->GetComponentRotation().Yaw, 0.0f));
+			GetCharacterMovement()->bUseControllerDesiredRotation = true;
+			GetCharacterMovement()->bOrientRotationToMovement = false;
+			GetCharacterMovement()->MaxWalkSpeed = 450.0f;
+		}
+		intervalTime = Weapone->IntervalTime;
 		isShooting = true;
 	}
 	else {
-		if (!APAnim->isAim) {
-			GetCharacterMovement()->bUseControllerDesiredRotation = false;
-			GetCharacterMovement()->bOrientRotationToMovement = true;
-			GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-		}
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+		
 		isShooting = false;
 	}
 
@@ -209,11 +181,7 @@ void AProjectOneCharacter::Shot()
 
 void AProjectOneCharacter::Roll()
 {
-	if (!GetCharacterMovement()->IsFalling() 
-		&&	!APAnim->isRoll
-		&& !APAnim->Montage_IsPlaying(APAnim->RollMontage)
-		&& !APAnim->isAim
-		&& !APAnim->isInAir)
+	if (CanRoll())
 	{
 		APAnim->isRoll = true;
 		FRotator DirectionVec = InputVector.GetSafeNormal().Rotation() + FollowCamera->GetComponentRotation().GetNormalized();
@@ -227,7 +195,7 @@ void AProjectOneCharacter::Roll()
 
 void AProjectOneCharacter::MoveReleased()
 {
-		InputVector = FVector::ZeroVector;
+	InputVector = FVector::ZeroVector;
 }
 
 void AProjectOneCharacter::JumpInput()
@@ -241,31 +209,42 @@ void AProjectOneCharacter::JumpInput()
 void AProjectOneCharacter::Shooting(float tick)
 {
 	if (isShooting) {
-		if (intervalTime >= Pistol->IntervalTime) {
+		if (intervalTime >= Weapone->IntervalTime) {
 			FTimerHandle time_;//bulletCheck
-			if (Pistol->NowBulletNum <= 0)
+			if (Weapone->CurBulletCount <= 0)
 				return;
-			Pistol->Shot(Pistol->GetActorLocation(), GetCharacterToAimeVec());
+			
+			//Spread Bullet
+			float RandPitch = FMath::RandRange(-(Weapone->Spread*0.5f), Weapone->Spread*0.5f);
+			float RandYaw = FMath::RandRange(-(Weapone->Spread*0.5f), Weapone->Spread*0.5f);
+			
+			FRotator SpreadRotation = FRotator(
+				GetCharacterToAimeVec().Rotation().Pitch+RandPitch, 
+				GetCharacterToAimeVec().Rotation().Yaw + RandYaw, 0.0f);
+
+			FVector SpreadVec = SpreadRotation.Vector().GetSafeNormal();
+			Weapone->Shot(Weapone->GetActorLocation(), SpreadVec);
 
 			//shake
 			auto GameInstance = Cast<UProjectOneGameInstance>(GetGameInstance());
 			GameInstance->HitShake(GameInstance->CShakePistol, 1.0f);
 
 			//Recoil
-			Rebound();
+			float PitchVal = FMath::RandRange(Weapone->VerticalRecoil * 0.7f, Weapone->VerticalRecoil);
+			float YawVal = FMath::RandRange(-Weapone->HorizonRecoil * 0.5f, Weapone->HorizonRecoil*0.5f);
+			AddControllerPitchInput(-PitchVal);
+			AddControllerYawInput(YawVal);
 		}
 		intervalTime -= tick;
 		if (intervalTime <= 0.0f) {
-			intervalTime = Pistol->IntervalTime;
+			intervalTime = Weapone->IntervalTime;
 		}
 	}
 }
 
-
-
 void AProjectOneCharacter::ReLoad()
 {
-	Pistol->ReLoad();
+	Weapone->ReLoad();
 }
 
 void AProjectOneCharacter::Hit(float Damage, AActor * Causer)
@@ -280,20 +259,9 @@ void AProjectOneCharacter::Hit(float Damage, AActor * Causer)
 		Hp = Hp - Damage;
 }
 
-void AProjectOneCharacter::DoCrouch() {
-	if (APAnim->isCrouch) {
-		UnCrouch();
-		APAnim->isCrouch = false;
-	}
-	else {
-		Crouch();
-		APAnim->isCrouch = true;
-	}
-}
 
 void AProjectOneCharacter::PlayCShake(int Index) {
 	GetWorld()->GetFirstPlayerController()->ClientPlayCameraShake(CShakeList[Index]);
-
 }
 
 
@@ -301,8 +269,6 @@ void AProjectOneCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-
-
 
 }
 
@@ -363,17 +329,9 @@ FVector AProjectOneCharacter::GetCharacterToAimeVec()
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, AimeStart, AimEnd, ECC_Visibility, CameraCollisionParams)) {
 		tmpVec = OutHit.ImpactPoint;
 	}
-	FVector reVal = tmpVec - Pistol->GetActorLocation();
+	FVector reVal = tmpVec - Weapone->GetActorLocation();
 
 	return reVal.GetSafeNormal();
-}
-
-void AProjectOneCharacter::Rebound()
-{
-	float PitchVal = FMath::RandRange(Pistol->VerticalRecoil * 0.7f, Pistol->VerticalRecoil);
-	float YawVal = FMath::RandRange(-Pistol->HorizonRecoil * 0.5f, Pistol->HorizonRecoil*0.5f);
-	AddControllerPitchInput(-PitchVal);
-	AddControllerYawInput(YawVal);
 }
 
 void AProjectOneCharacter::Dead()
@@ -384,4 +342,53 @@ void AProjectOneCharacter::Dead()
 void AProjectOneCharacter::Evolution()
 {
 	SetActorScale3D(FVector(1.1f, 1.1f, 1.1f));
+}
+
+bool AProjectOneCharacter::CanRoll()
+{
+	return (!APAnim->isRoll && !APAnim->Montage_IsPlaying(APAnim->RollMontage) && !APAnim->isInAir) ? true : false;
+}
+
+void AProjectOneCharacter::ForwardDash()
+{
+	if (CanRoll())
+	{
+		GetCapsuleComponent()->SetRelativeRotation(
+			FRotator(0.0f, FollowCamera->GetComponentRotation().GetNormalized().Yaw, 0.0f)
+		);
+		APAnim->Montage_Play(APAnim->RollMontage);
+	}
+}
+
+void AProjectOneCharacter::BackDash()
+{
+	if (CanRoll())
+	{
+		GetCapsuleComponent()->SetRelativeRotation(
+			FRotator(0.0f, FollowCamera->GetComponentRotation().GetNormalized().Yaw - 180.0f, 0.0f)
+		);
+		APAnim->Montage_Play(APAnim->RollMontage);
+	}
+}
+
+void AProjectOneCharacter::LeftDash()
+{
+	if (CanRoll())
+	{
+		GetCapsuleComponent()->SetRelativeRotation(
+			FRotator(0.0f, FollowCamera->GetComponentRotation().GetNormalized().Yaw - 90.0f,0.0f)
+		);
+		APAnim->Montage_Play(APAnim->RollMontage);
+	}
+}
+
+void AProjectOneCharacter::RightDash()
+{
+	if (CanRoll())
+	{
+		GetCapsuleComponent()->SetRelativeRotation(
+			FRotator(0.0f, FollowCamera->GetComponentRotation().GetNormalized().Yaw + 90.0f, 0.0f)
+		);
+		APAnim->Montage_Play(APAnim->RollMontage);
+	}
 }

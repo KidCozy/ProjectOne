@@ -32,6 +32,5 @@ void UPlayerCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds) {
 		auto Character = Cast<ACharacter>(Pawn);
 		if (Character)
 			isInAir = Character->GetMovementComponent()->IsFalling();
-		//	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, FString::SanitizeFloat(PawnForwardSpeed) + FString::SanitizeFloat(PawnRightSpeed));
 	}
 }

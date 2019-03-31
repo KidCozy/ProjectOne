@@ -20,6 +20,10 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	//최대 탄창, 수직반동, 좌우반동, 탄퍼짐, 재장전 시간, 사정거리
+	void InitWeapone(int maxBullet, float verticalRecoil, float horizonRecoil, float spread, float reloadDelay, float range);
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -32,13 +36,13 @@ public:
 	UStaticMeshComponent * Mesh;
 
 	UPROPERTY()
-	int NowBulletNum;
+	int CurBulletCount;
 
 	UPROPERTY()
-	int MaxBulletNum;
+	int MaxBulletCount;
 
 	UPROPERTY()
-	float RealoadDelay;
+	float ReloadDelay;
 
 	UPROPERTY()
 	float IntervalTime;
@@ -47,9 +51,11 @@ public:
 	float Range;
 
 	UPROPERTY(EditAnywhere)
+	float Spread;
+
+	UPROPERTY(EditAnywhere)
 	float VerticalRecoil;
 
 	UPROPERTY(EditAnywhere)
 	float HorizonRecoil;
-
 };

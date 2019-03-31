@@ -30,7 +30,7 @@ public:
 		float BaseLookUpRate;
 	
 	UPROPERTY()
-	class AWeapon * Pistol;
+	class AWeapon * Weapone;
 
 	UPROPERTY()
 	float Hp;
@@ -38,9 +38,10 @@ public:
 	void Hit(float Damage, AActor * Causer);
 
 protected: // protected 함수 영역
-
+	
 	// 진입점, 초기화
-	void SetResources(); // 리소스 로드 (초기화)
+	virtual void SetResources(); // 리소스 로드 (초기화)
+	virtual void SetInitWeapone();
 
 	// 아무 쓸모없는 VR코드
 	void OnResetVR();
@@ -52,24 +53,24 @@ protected: // protected 함수 영역
 	void MoveRight(float Value);
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
-	void DoCrouch();
 
 	// 액션 함수
-	void Aim();
-	void AimLerp();
 	void Shot();
 	void Roll();
+	void ForwardDash();
+	void BackDash();
+	void LeftDash();
+	void RightDash();
 	void MoveReleased();
 	void JumpInput();
 
 	// 화면FX
 	void PlayCShake(int Index);
 	
-	void Shooting(float tick);
+	virtual void Shooting(float tick);
 
 	void ReLoad();
 	void Evolution();
-	void Rebound();
 	void Dead();
 	FVector GetCharacterToAimeVec();
 protected: // protected 자원 영역
@@ -101,6 +102,8 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+private:
+	bool CanRoll();
 private:
 	float intervalTime = 0.0f;
 	FVector InputVector;

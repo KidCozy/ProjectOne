@@ -17,15 +17,9 @@ class PROJECTONE_API UPlayerCharacterAnimInstance : public UAnimInstance
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float Forward;
+	float Forward;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float Right;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		bool isAim;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		bool isCrouch;
+	float Right;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool isRoll;
