@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BearCharacter.h"
+#include "PlayerStatComponent.h"
+#include "Environments/GameModes/ProjectOneGameInstance.h"
 #include "Weapons/Pistol.h"
 
 ABearCharacter::ABearCharacter() {
@@ -20,12 +22,16 @@ void ABearCharacter::SetResources()
 	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/AnimationBlueprint/PlayerCharacter_AnimBP.PlayerCharacter_AnimBP_C'"));
 	if (TEMP_ANIM.Succeeded())
 		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
-	UE_LOG(LogTemp, Warning, TEXT("BearReSource"));
 }
 
 void ABearCharacter::SetInitWeapone()
 {
-	Weapone->InitWeapone(1, 2.0f, 1.0f, 1.0f, 3.0f, 100.0f);
+	CharacterStat->SetCharacterID(7);
+	CharacterStat->SetWeaponeID(1);
+	Weapone->InitWeapone(
+		CharacterStat->GetWeaphoneStatData()->Magazine, CharacterStat->GetWeaphoneStatData()->Vertical_recoil
+		, CharacterStat->GetWeaphoneStatData()->Horizon_recoil, CharacterStat->GetWeaphoneStatData()->Spread,
+		CharacterStat->GetWeaphoneStatData()->Reload_speed,1000.0f, CharacterStat->GetWeaphoneStatData()->Range);
 }
 
 void ABearCharacter::Shooting(float tick)

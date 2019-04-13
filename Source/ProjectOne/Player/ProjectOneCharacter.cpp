@@ -4,13 +4,16 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Weapons/Pistol.h"
 #include "ProjectOne/Environments/GameModes/ProjectOneGameInstance.h"
+#include "PlayerStatComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-
+#include "PaperSpriteComponent.h"
+#include "PlayerSoundManager.h"
 
 void AProjectOneCharacter::PostInitializeComponents() {
 	Super::PostInitializeComponents();
@@ -31,10 +34,21 @@ void AProjectOneCharacter::SetResources() {
 	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/AnimationBlueprint/PlayerCharacter_AnimBP.PlayerCharacter_AnimBP_C'"));
 	if (TEMP_ANIM.Succeeded())
 		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
+
+	static ConstructorHelpers::FObjectFinder<APlayerSoundManager> SOUNDMANAGER(TEXT("Blueprint'/Game/ProjectOneBlueprint/MyPlayerSoundManager.MyPlayerSoundManager_C'"));
+	if (SOUNDMANAGER.Succeeded()) {
+		SoundManager = SOUNDMANAGER.Object;
+	}
+
 }
 
 void AProjectOneCharacter::SetInitWeapone()
 {
+	CharacterStat->SetWeaponeID(1);
+	FPOWeaponeData* stat = CharacterStat->GetWeaphoneStatData();
+	Weapone->InitWeapone(
+		stat->Magazine, stat->Vertical_recoil*0.1f, stat->Horizon_recoil*0.1f,
+		stat->Spread*3.0f, stat->Reload_speed, 30.0f, stat->Range);
 }
 
 
@@ -46,7 +60,7 @@ AProjectOneCharacter::AProjectOneCharacter()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
-
+	CharacterStat = CreateDefaultSubobject<UPlayerStatComponent>(TEXT("CharcterStat"));
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
 
@@ -73,18 +87,9 @@ AProjectOneCharacter::AProjectOneCharacter()
 
 	FollowCamera->SetRelativeLocation(FVector(-50.0f, 0, 0));
 
-
 	CameraBoom->TargetArmLength = 350.0f;
 	CameraBoom->SocketOffset = FVector(40.0f, 50.0f, 60.0f);
-/*
-	CameraBoom->bEnableCameraLag = true;
-	CameraBoom->bUseCameraLagSubstepping = true;
-	CameraBoom->bDrawDebugLagMarkers = true;
-
-	CameraBoom->CameraLagSpeed = 5.0f;
-	CameraBoom->CameraLagMaxDistance = 70.0f;
-	CameraBoom->CameraLagMaxTimeStep = 0.5f;*/
-
+	
 	InputVector = FVector::ZeroVector;
 	Hp = 100.0f;
 
@@ -138,6 +143,10 @@ void AProjectOneCharacter::BeginPlay()
 	FAttachmentTransformRules test(EAttachmentRule::KeepRelative, false);
 	Weapone->SetOwner(this);
 	Weapone->AttachToActor(this, test);
+
+	//SoundManager->SetOwner(this);
+	//SoundManager->AttachToActor(this, test);
+	
 	SetInitWeapone();
 }
 
@@ -159,6 +168,19 @@ void AProjectOneCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector L
 
 void AProjectOneCharacter::Shot()
 {
+	
+	/*FAkAudioDevice* AudioDevice;
+	if (AudioDevice->Init())
+	{
+		AudioDevice->PostEvent(PistolSound, this);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SS"));
+	}*/
+
+	
+
 	if (!isShooting) {
 		if (!APAnim->Montage_IsPlaying(APAnim->RollMontage)) {
 			GetCapsuleComponent()->SetRelativeRotation(FRotator(0.0f, FollowCamera->GetComponentRotation().Yaw, 0.0f));
@@ -223,7 +245,7 @@ void AProjectOneCharacter::Shooting(float tick)
 				GetCharacterToAimeVec().Rotation().Yaw + RandYaw, 0.0f);
 
 			FVector SpreadVec = SpreadRotation.Vector().GetSafeNormal();
-			Weapone->Shot(Weapone->GetActorLocation(), SpreadVec);
+			Weapone->Shot(Weapone->GetActorLocation(), SpreadVec, ScratchNormal);
 
 			//shake
 			auto GameInstance = Cast<UProjectOneGameInstance>(GetGameInstance());
@@ -320,7 +342,7 @@ FVector AProjectOneCharacter::GetCharacterToAimeVec()
 
 	FHitResult OutHit;
 	FVector CameraForwardVector = FollowCamera->GetComponentRotation().Vector();
-	FVector AimeStart = (CameraForwardVector*200.0f) + FollowCamera->GetComponentLocation();
+	FVector AimeStart = (CameraForwardVector*400.0f) + FollowCamera->GetComponentLocation();
 	FVector AimEnd = (CameraForwardVector*3000.0f) + AimeStart;
 	FCollisionQueryParams CameraCollisionParams;
 
@@ -328,7 +350,11 @@ FVector AProjectOneCharacter::GetCharacterToAimeVec()
 
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, AimeStart, AimEnd, ECC_Visibility, CameraCollisionParams)) {
 		tmpVec = OutHit.ImpactPoint;
+		ScratchNormal = OutHit.Normal;
 	}
+	else
+		ScratchNormal = FVector::ZeroVector;
+	
 	FVector reVal = tmpVec - Weapone->GetActorLocation();
 
 	return reVal.GetSafeNormal();

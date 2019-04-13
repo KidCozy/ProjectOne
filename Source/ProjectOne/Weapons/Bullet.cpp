@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Bullet.h"
-
 // Sets default values
 ABullet::ABullet()
 {
@@ -10,12 +9,9 @@ ABullet::ABullet()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	Col = CreateDefaultSubobject<USphereComponent>(TEXT("SPHERE"));
-
 	RootComponent = Mesh;
 
 	Col->SetupAttachment(RootComponent);
-
-
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> PJ_Mesh(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	if (PJ_Mesh.Succeeded())
@@ -23,14 +19,28 @@ ABullet::ABullet()
 		Mesh->SetStaticMesh(PJ_Mesh.Object);
 	}
 
-
 	Col->SetSphereRadius(50.0f);
-	Speed = 10.0f;
+	Speed = 70.0f;
 
 	DirectionVector = GetActorForwardVector();
-	SetActorScale3D(FVector(0.1f, 0.1f, 0.1f));
+	SetActorScale3D(FVector(0.2f, 0.05f, 0.05f));
 
 	Mesh->SetGenerateOverlapEvents(false);
+	
+	static ConstructorHelpers::FObjectFinder<UMaterial> MATERIAL(TEXT("Material'/Game/Materail/M_Projectile.M_Projectile'"));
+
+	if (MATERIAL.Succeeded()) {
+		Material = MATERIAL.Object;
+	}
+
+	Materialinstance = UMaterialInstanceDynamic::Create(Material, Mesh);
+	Mesh->SetMaterial(0, Materialinstance);
+
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> DECALINS(TEXT("MaterialInstanceConstant'/Game/Materail/BulletScratch_Decal_Inst.BulletScratch_Decal_Inst'"));
+	if (DECALINS.Succeeded()) {
+		DecalMaterialinstance = DECALINS.Object;
+	}
+
 }
 
 void ABullet::PostInitializeComponents()
@@ -49,14 +59,21 @@ void ABullet::Tick(float DeltaTime)
 void ABullet::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OherCcomp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	ABLOG_S(Warning);
+	//CreateDecal
+	
+	UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DecalMaterialinstance,
+			FVector(30.0f, 5.0f, 5.0f), this->GetActorLocation(),
+		Normal.Rotation(), 100.0f);
+
+	
 	ABLOG(Warning, TEXT("Owner : %s"), *(GetOwner()->GetName()));
 	ABLOG(Warning, TEXT("OtherActor : %s"), *(OtherActor->GetName()));
 
 	ABCHECK(IsValid(Cast<AProjectOneCharacter>(OtherActor)));
 	auto Character = Cast<AProjectOneCharacter>(OtherActor);
 	Character->Hit(20.0f, GetOwner());
-
 	Destroy(this);
+
 }
 
 void ABullet::SetDirection(FVector direction)

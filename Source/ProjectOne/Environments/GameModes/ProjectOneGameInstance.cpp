@@ -14,16 +14,32 @@ UProjectOneGameInstance::UProjectOneGameInstance(const FObjectInitializer& Objec
 		CShakePistol = CSHAKE_BY_PISTOL.Class;
 	//	static ConstructorHelpers::FClassFinder<UCameraShake> CSHAKE_BY_BOSS_DIVE(TEXT("DASD"));
 	//	static ConstructorHelpers::FClassFinder<UCameraShake> CSHAKE_BY_PLAYER_ATTACK(TEXT("DASDS"));
+	FString CharacterDataPath = TEXT("DataTable'/Game/Data/Character.Character'");
+	static ConstructorHelpers::FObjectFinder<UDataTable> DT_CHARACTER(*CharacterDataPath);
+	ABCHECK(DT_CHARACTER.Succeeded());
+	CharacterTable = DT_CHARACTER.Object;
+	ABCHECK(CharacterTable->GetRowMap().Num() > 0);
 
+	FString WeaponeDataPath = TEXT("DataTable'/Game/Data/Weapone.Weapone'");
+	static ConstructorHelpers::FObjectFinder<UDataTable> DT_WEAPONE(*WeaponeDataPath);
+	ABCHECK(DT_WEAPONE.Succeeded());
+	WeaponeTable = DT_WEAPONE.Object;
+	ABCHECK(WeaponeTable->GetRowMap().Num() > 0);
+}
+
+FPOCharcacterData * UProjectOneGameInstance::GetCharcterData(int32 ID)
+{
+	return CharacterTable->FindRow<FPOCharcacterData>(*FString::FromInt(ID), TEXT(""));
+}
+
+FPOWeaponeData * UProjectOneGameInstance::GetWeaponData(int32 ID)
+{
+	return WeaponeTable->FindRow<FPOWeaponeData>(*FString::FromInt(ID), TEXT(""));
 }
 
 
 void UProjectOneGameInstance::Init() {
-
-
-
-
-
+	Super::Init();
 }
 
 void UProjectOneGameInstance::HitShake(TSubclassOf<UCameraShake> CShake, float Scalar) {

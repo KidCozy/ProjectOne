@@ -22,7 +22,7 @@ AWeapon::AWeapon()
 	HorizonRecoil = 0.1f;
 }
 
-void AWeapon::InitWeapone(int maxBullet, float verticalRecoil, float horizonRecoil, float spread, float reloadDelay, float range)
+void AWeapon::InitWeapone(int maxBullet, float verticalRecoil, float horizonRecoil, float spread, float reloadDelay, float bulletSpeed, float range)
 {
 	MaxBulletCount = maxBullet;
 	CurBulletCount = MaxBulletCount;
@@ -30,7 +30,9 @@ void AWeapon::InitWeapone(int maxBullet, float verticalRecoil, float horizonReco
 	HorizonRecoil = horizonRecoil;
 	Spread = spread;
 	ReloadDelay = reloadDelay;
+	Speed = bulletSpeed;
 	Range = range;
+	
 }
 
 // Called when the game starts or when spawned
@@ -47,15 +49,16 @@ void AWeapon::Tick(float DeltaTime)
 
 }
 
-void AWeapon::Shot(FVector SpawnPos, FVector Direction)
+void AWeapon::Shot(FVector SpawnPos, FVector Direction, FVector Nolmal)
 {
 	if (CurBulletCount > 0) {
 
 		auto Bullet = GetWorld()->SpawnActor<ABullet>(SpawnPos, FRotator::ZeroRotator);
 		if (Bullet != NULL) {
 			Bullet->SetDirection(Direction);
-			Bullet->Speed = 40.0f;
+			Bullet->Speed = Speed;
 			Bullet->SetOwner(GetOwner());
+			Bullet->Normal = Nolmal;
 		}
 		CurBulletCount--;
 	}

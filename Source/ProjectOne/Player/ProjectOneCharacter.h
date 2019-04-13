@@ -18,19 +18,22 @@ public:
 	AProjectOneCharacter();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		class USpringArmComponent* CameraBoom;
+	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		class UCameraComponent* FollowCamera;
+	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-		float BaseTurnRate;
+	float BaseTurnRate;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-		float BaseLookUpRate;
+	float BaseLookUpRate;
 	
 	UPROPERTY()
 	class AWeapon * Weapone;
+
+	UPROPERTY(VisibleAnywhere)
+	class APlayerSoundManager* SoundManager;
 
 	UPROPERTY()
 	float Hp;
@@ -81,11 +84,16 @@ protected: // protected 자원 영역
 	APlayerController* PlayerController;
 
 	UPROPERTY(VisibleAnywhere)
-		class UPlayerCharacterAnimInstance* APAnim;
+	class UPlayerCharacterAnimInstance* APAnim;
 
 	UPROPERTY(VisibleAnywhere)
-		TArray<TSubclassOf<UCameraShake>> CShakeList;
+	TArray<TSubclassOf<UCameraShake>> CShakeList;
 
+	UPROPERTY(VisibleAnywhere, Category = Stat)
+	class UPlayerStatComponent* CharacterStat;
+
+
+	UPROPERTY()
 	bool isShooting;
 
 
@@ -98,14 +106,15 @@ protected:
 	// End of APawn interface
 
 public:
-
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 private:
 	bool CanRoll();
+
 private:
 	float intervalTime = 0.0f;
 	FVector InputVector;
+	FVector ScratchNormal;
 };
 

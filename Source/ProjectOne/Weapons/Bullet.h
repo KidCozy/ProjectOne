@@ -20,6 +20,8 @@ public:
 
 	FVector DirectionVector;
 
+	FVector Normal;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -38,4 +40,16 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Mesh)
 	UStaticMeshComponent * Mesh;
 
+	UPROPERTY(VisibleAnywhere, Category = Matareal)
+	UMaterial * Material;
+
+	UPROPERTY(VisibleAnywhere, Category = Matareal)
+	UMaterialInstanceDynamic * Materialinstance;
+
+
+	UPROPERTY(EditAnywhere, Category = Scratch)
+	UMaterialInstance * DecalMaterialinstance;
+
+	//UPROPERTY(VisibleAnywhere, Category = Matareal)
+	//UDecalComponent * DecalMaterialinstance;
 };
