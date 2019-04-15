@@ -75,11 +75,11 @@ void AAICharacter::Tick(float delta)
 	}
 	MoveCover();*/
 
-	//MoveCover();
+	MoveCover();
 
-	MoveToLocation(FVector(1820.0f, -3520.0f, 226.0f));
+	//MoveToLocation(FVector(1820.0f, -3520.0f, 226.0f));
 
-	ABLOG(Warning,TEXT("TargetCoverPos : %f, %f ,%f"),TargetCoverPos.X, TargetCoverPos.Y, TargetCoverPos.Z )
+	//ABLOG(Warning,TEXT("TargetCoverPos : %f, %f ,%f"),TargetCoverPos.X, TargetCoverPos.Y, TargetCoverPos.Z )
 
 	//RightDash();
 	
@@ -96,14 +96,6 @@ void AAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FVector SpawnPos(100.0f, 0.0f, 50.0f);
-	Weapone = GetWorld()->SpawnActor<AWeapon>(SpawnPos, FRotator::ZeroRotator);
-	FAttachmentTransformRules test(EAttachmentRule::KeepRelative, false);
-	Weapone->SetOwner(this);
-	Weapone->AttachToActor(this, test);
-
-
-
 
 	const FRotator Rotation = Controller->GetControlRotation();
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -111,7 +103,7 @@ void AAICharacter::BeginPlay()
 	// get forward vector
 	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-	DrawDebugSphere(GetWorld(), GetActorLocation() + Direction * 2000.0f, 1800.0f, 16, FColor::Green, false, 2.0f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation() + Direction * 2000.0f, 1800.0f, 16, FColor::Green, false, 2.0f);
 
 	//GetMesh()->SetSimulatePhysics(false);
 
@@ -121,7 +113,7 @@ void AAICharacter::BeginPlay()
 	//LookAroundStart();
 	CurState = AIState::Neutral;
 	Detected();
-	//NextCover();
+	NextCover();
 	//Shot();
 
 
@@ -274,7 +266,7 @@ void AAICharacter::Shooting(float tick)
 				GetCharacterToAimeVec().Rotation().Yaw + RandYaw, 0.0f);
 
 			FVector SpreadVec = SpreadRotation.Vector().GetSafeNormal();
-			Weapone->Shot(Weapone->GetActorLocation(), SpreadVec);
+			Weapone->Shot(Weapone->GetActorLocation(), SpreadVec, ScratchNormal);
 
 
 			//Recol
@@ -567,13 +559,13 @@ void AAICharacter::Hide(AActor * Attacker)
 
 	for (int i = 0; i < TargetCover->SafePos.Num(); i++) 
 	{
-		DrawDebugLine(GetWorld(), Character->GetActorLocation() , TargetCover->SafePos[i], FColor::Green, false, 5.0f, 0, 1);
+		//DrawDebugLine(GetWorld(), Character->GetActorLocation() , TargetCover->SafePos[i], FColor::Green, false, 5.0f, 0, 1);
 		if (GetWorld()->LineTraceSingleByChannel(OutHit, Character->GetActorLocation(), TargetCover->SafePos[i], ECC_Visibility, CollisionParams))
 		{
 			//DrawDebugLine(GetWorld(), Character->FollowCamera->GetComponentLocation(), TargetCover->SafePos[i], FColor::Green, false, 5.0f, 0, 1);
 			if (OutHit.bBlockingHit)
 			{
-				DrawDebugLine(GetWorld(), Character->GetActorLocation(), TargetCover->SafePos[i], FColor::Red, false, 5.0f, 0, 1);
+				//DrawDebugLine(GetWorld(), Character->GetActorLocation(), TargetCover->SafePos[i], FColor::Red, false, 5.0f, 0, 1);
 				if (TargetCoverPos == FVector::ZeroVector)
 					TargetCoverPos = TargetCover->SafePos[i];
 
@@ -628,7 +620,7 @@ void AAICharacter::Detected()
 	FCollisionQueryParams CollisionParams;
 
 
-	DrawDebugSphere(GetWorld(), GetActorLocation(), 200.0f, 16, FColor::Red, false, 0.2f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), 200.0f, 16, FColor::Red, false, 0.2f);
 
 	if (bulletResult)
 	{
@@ -660,7 +652,7 @@ void AAICharacter::Detected()
 					if (OutHit.bBlockingHit)
 					{
 						//ABLOG_S(Warning);
-						DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Red, false, 0.2f, 0, 1);
+						//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Red, false, 0.2f, 0, 1);
 						DetectedPlayers.Remove(Player);
 						/*i++;
 						DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation(), Player->GetActorLocation(), FColor::Green, false, 1, 0, 1);
@@ -678,7 +670,7 @@ void AAICharacter::Detected()
 					}
 
 					i++;
-					DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Green, false, 0.2f, 0, 1);
+					//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Green, false, 0.2f, 0, 1);
 					//GEngine->AddOnScreenDebugMessage(i, 5.0f, FColor::Blue, *OverlapResult.GetActor()->GetName());
 					DetectedPlayers.AddUnique(Player);
 				}
@@ -692,7 +684,7 @@ void AAICharacter::Detected()
 					if (OutHit.bBlockingHit)
 					{
 						//ABLOG_S(Warning);
-						DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Cover->GetActorLocation(), FColor::Red, false, 0.2f, 0, 1);
+						//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Cover->GetActorLocation(), FColor::Red, false, 0.2f, 0, 1);
 						
 
 						if (OutHit.GetActor()->GetActorLocation() == Cover->GetActorLocation())
@@ -706,7 +698,7 @@ void AAICharacter::Detected()
 							//}
 
 							i++;
-							DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Cover->GetActorLocation(), FColor::Green, false, 0.2f, 0, 1);
+							//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Cover->GetActorLocation(), FColor::Green, false, 0.2f, 0, 1);
 							//GEngine->AddOnScreenDebugMessage(i, 5.0f, FColor::Blue, *OverlapResult.GetActor()->GetName());
 							if (TargetLocationPos != FVector::ZeroVector)
 							{
@@ -744,7 +736,7 @@ void AAICharacter::Detected()
 		}
 	}
 
-	DrawDebugSphere(GetWorld(), GetActorLocation() + Direction * 2000.0f, 2000.0f, 16, FColor::Green, false, 0.2f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation() + Direction * 2000.0f, 2000.0f, 16, FColor::Green, false, 0.2f);
 }
 
 void AAICharacter::CheckObstacle()
@@ -768,7 +760,7 @@ void AAICharacter::CheckObstacle()
 			if (!FirstCheck) {
 				FirstCheck = true;
 				//ABLOG_S(Warning);
-				DrawDebugLine(GetWorld(), GetActorLocation(), End, FColor::Red, false, 1, 0, 1);
+				//DrawDebugLine(GetWorld(), GetActorLocation(), End, FColor::Red, false, 1, 0, 1);
 
 				float tmp = GetActorForwardVector().Rotation().Yaw;
 				tmp += 5.0f;
@@ -781,7 +773,7 @@ void AAICharacter::CheckObstacle()
 				LeftVec = FRotator(0.0f, tmp, 0.0f).Vector().GetSafeNormal()*550.f;
 				LeftVec = GetActorLocation() + LeftVec;
 
-				DrawDebugLine(GetWorld(), GetActorLocation(), LeftVec, FColor::Green, false, 1, 0, 1);
+				//DrawDebugLine(GetWorld(), GetActorLocation(), LeftVec, FColor::Green, false, 1, 0, 1);
 
 				if (GetWorld()->LineTraceSingleByChannel(OutHit, GetActorLocation(), End, ECC_Visibility, CollisionParams))
 				{
@@ -848,7 +840,7 @@ void AAICharacter::CheckObstacle()
 	{
 		End = GetActorForwardVector() * 500.0f;
 		End = GetActorLocation() + End;
-		DrawDebugLine(GetWorld(), GetActorLocation(), End, FColor::Green, false, 1, 0, 1);
+		//DrawDebugLine(GetWorld(), GetActorLocation(), End, FColor::Green, false, 1, 0, 1);
 		FirstCheck = false;
 		DirectionVec = MoveVec::ForwardVec;
 	}

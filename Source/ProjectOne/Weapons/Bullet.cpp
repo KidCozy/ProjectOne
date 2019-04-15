@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Bullet.h"
+#include "AI/AICharacter.h"
 // Sets default values
 ABullet::ABullet()
 {
@@ -21,6 +22,10 @@ ABullet::ABullet()
 
 	Col->SetSphereRadius(50.0f);
 	Speed = 70.0f;
+
+	LifeTime = 0.0f;
+
+	Col->SetCollisionProfileName(TEXT("Bullet"));
 
 	DirectionVector = GetActorForwardVector();
 	SetActorScale3D(FVector(0.2f, 0.05f, 0.05f));
@@ -54,11 +59,16 @@ void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	AddActorWorldOffset(DirectionVector * Speed);
+
+	LifeTime += DeltaTime;
+	if (LifeTime > 5.0f)
+		Destroy(this);
 }
 
 void ABullet::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OherCcomp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	ABLOG_S(Warning);
+	ABCHECK(GetOwner());
 	//CreateDecal
 	
 	UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DecalMaterialinstance,
@@ -72,6 +82,12 @@ void ABullet::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor * 
 	ABCHECK(IsValid(Cast<AProjectOneCharacter>(OtherActor)));
 	auto Character = Cast<AProjectOneCharacter>(OtherActor);
 	Character->Hit(20.0f, GetOwner());
+
+	ABCHECK(IsValid(Cast<AAICharacter>(OtherActor)));
+	auto AI = Cast<AAICharacter>(OtherActor);
+	AI->Hide(GetOwner());
+
+
 	Destroy(this);
 
 }

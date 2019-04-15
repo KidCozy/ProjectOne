@@ -18,6 +18,7 @@ class PROJECTONE_API UPlayerCharacterAnimInstance : public UAnimInstance
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Forward;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Right;
 
@@ -30,11 +31,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadonly)
 	UAnimMontage* RollMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadonly)
+	UAnimMontage* SecondRollMontage;
+
 	UPlayerCharacterAnimInstance();
+
+	virtual void Evolution();
 private:
 	UFUNCTION()
 	void AnimNotify_RollEnd();
 
 	UFUNCTION()
 	void AnimNotify_JumpEnd();
+
+protected:
+	virtual void SetRollMontage();
 };

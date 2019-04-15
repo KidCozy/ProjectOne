@@ -13,5 +13,9 @@ UCLASS()
 class PROJECTONE_API AWolfCharacter : public AProjectOneCharacter
 {
 	GENERATED_BODY()
+public:
+	AWolfCharacter();
+	void SetResources() override;
 protected:
+	void Evolution() override;
 };

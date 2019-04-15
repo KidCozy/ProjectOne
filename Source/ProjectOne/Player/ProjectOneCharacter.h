@@ -16,6 +16,12 @@ class AProjectOneCharacter : public ACharacter
 
 public:
 	AProjectOneCharacter();
+	//진화
+	UPROPERTY(VisibleAnywhere)
+	class USkeletalMesh* SecondSkMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	class UClass* SecondAnimIns;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -30,10 +36,11 @@ public:
 	float BaseLookUpRate;
 	
 	UPROPERTY()
-	class AWeapon * Weapone;
+	class AWeapon* Weapone;
 
-	UPROPERTY(VisibleAnywhere)
-	class APlayerSoundManager* SoundManager;
+	
+	UPROPERTY()
+	class UPlayerAkComponent* SoundComponent;
 
 	UPROPERTY()
 	float Hp;
@@ -44,7 +51,9 @@ protected: // protected 함수 영역
 	
 	// 진입점, 초기화
 	virtual void SetResources(); // 리소스 로드 (초기화)
+	virtual void SetComponents();
 	virtual void SetInitWeapone();
+
 
 	// 아무 쓸모없는 VR코드
 	void OnResetVR();
@@ -60,10 +69,11 @@ protected: // protected 함수 영역
 	// 액션 함수
 	void Shot();
 	void Roll();
-	void ForwardDash();
-	void BackDash();
-	void LeftDash();
-	void RightDash();
+
+	virtual void ForwardDash();
+	virtual void BackDash();
+	virtual void LeftDash();
+	virtual void RightDash();
 	void MoveReleased();
 	void JumpInput();
 
@@ -73,7 +83,7 @@ protected: // protected 함수 영역
 	virtual void Shooting(float tick);
 
 	void ReLoad();
-	void Evolution();
+	virtual void Evolution();
 	void Dead();
 	FVector GetCharacterToAimeVec();
 protected: // protected 자원 영역
@@ -109,10 +119,11 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+
 private:
 	bool CanRoll();
 
-private:
+protected:
 	float intervalTime = 0.0f;
 	FVector InputVector;
 	FVector ScratchNormal;

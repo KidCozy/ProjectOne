@@ -13,11 +13,13 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PaperSpriteComponent.h"
-#include "PlayerSoundManager.h"
+#include "POComponents/PlayerAkComponent.h"
+#include "AkAudioDevice.h"
+
 
 void AProjectOneCharacter::PostInitializeComponents() {
 	Super::PostInitializeComponents();
-	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	SetComponents();
 }
 
 // *** 리소스 로드 (초기화) ***
@@ -25,21 +27,23 @@ void AProjectOneCharacter::SetResources() {
 	static ConstructorHelpers::FClassFinder<UCameraShake> CSHAKE_FIRE(TEXT("Blueprint'/Game/ScreenFX/CShake_Fire.CShake_Fire_C'"));
 	if (CSHAKE_FIRE.Succeeded())
 		CShakeList.Add(CSHAKE_FIRE.Class);
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_MANEQUIN(TEXT("SkeletalMesh'/Game/Animations/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
-	if (SK_MANEQUIN.Succeeded())
-		GetMesh()->SetSkeletalMesh(SK_MANEQUIN.Object);
 
-	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -90.0f), FRotator(0.0f, -90.0f, 0.0f));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> ChildChracter(TEXT("SkeletalMesh'/Game/Animations/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
+	if (ChildChracter.Succeeded())
+		GetMesh()->SetSkeletalMesh(ChildChracter.Object);
+
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -32.0f), FRotator(0.0f, -90.0f, 0.0f));
 
 	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/AnimationBlueprint/PlayerCharacter_AnimBP.PlayerCharacter_AnimBP_C'"));
 	if (TEMP_ANIM.Succeeded())
 		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
 
-	static ConstructorHelpers::FObjectFinder<APlayerSoundManager> SOUNDMANAGER(TEXT("Blueprint'/Game/ProjectOneBlueprint/MyPlayerSoundManager.MyPlayerSoundManager_C'"));
-	if (SOUNDMANAGER.Succeeded()) {
-		SoundManager = SOUNDMANAGER.Object;
-	}
+	
+}
 
+void AProjectOneCharacter::SetComponents()
+{
+	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
 void AProjectOneCharacter::SetInitWeapone()
@@ -54,10 +58,8 @@ void AProjectOneCharacter::SetInitWeapone()
 
 AProjectOneCharacter::AProjectOneCharacter()
 {
-	
 	SetResources();
-
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(15.f, 32.0f);
 
 	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	CharacterStat = CreateDefaultSubobject<UPlayerStatComponent>(TEXT("CharcterStat"));
@@ -69,7 +71,8 @@ AProjectOneCharacter::AProjectOneCharacter()
 	bUseControllerRotationRoll = false;
 
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
@@ -85,13 +88,19 @@ AProjectOneCharacter::AProjectOneCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+
+
+	SoundComponent = CreateDefaultSubobject<UPlayerAkComponent>(TEXT("SoundComponent"));
+	SoundComponent->SetPlayer(this);
+
 	FollowCamera->SetRelativeLocation(FVector(-50.0f, 0, 0));
 
 	CameraBoom->TargetArmLength = 350.0f;
 	CameraBoom->SocketOffset = FVector(40.0f, 50.0f, 60.0f);
-	
+
 	InputVector = FVector::ZeroVector;
 	Hp = 100.0f;
+
 
 }
 
@@ -138,14 +147,12 @@ void AProjectOneCharacter::Tick(float delta) {
 void AProjectOneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	FVector SpawnPos(100.0f, 0.0f, 50.0f);
+	FVector SpawnPos(FVector(8.0f, 0.0f, 2.0f));
 	Weapone = GetWorld()->SpawnActor<AWeapon>(SpawnPos, FRotator::ZeroRotator);
-	FAttachmentTransformRules test(EAttachmentRule::KeepRelative, false);
+	FAttachmentTransformRules AttachmerRules(EAttachmentRule::KeepRelative, false);
 	Weapone->SetOwner(this);
-	Weapone->AttachToActor(this, test);
+	Weapone->AttachToActor(this, AttachmerRules);
 
-	//SoundManager->SetOwner(this);
-	//SoundManager->AttachToActor(this, test);
 	
 	SetInitWeapone();
 }
@@ -168,34 +175,15 @@ void AProjectOneCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector L
 
 void AProjectOneCharacter::Shot()
 {
-	
-	/*FAkAudioDevice* AudioDevice;
-	if (AudioDevice->Init())
-	{
-		AudioDevice->PostEvent(PistolSound, this);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SS"));
-	}*/
-
-	
-
 	if (!isShooting) {
 		if (!APAnim->Montage_IsPlaying(APAnim->RollMontage)) {
-			GetCapsuleComponent()->SetRelativeRotation(FRotator(0.0f, FollowCamera->GetComponentRotation().Yaw, 0.0f));
-			GetCharacterMovement()->bUseControllerDesiredRotation = true;
-			GetCharacterMovement()->bOrientRotationToMovement = false;
 			GetCharacterMovement()->MaxWalkSpeed = 450.0f;
 		}
 		intervalTime = Weapone->IntervalTime;
 		isShooting = true;
 	}
 	else {
-		GetCharacterMovement()->bUseControllerDesiredRotation = false;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
 		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-		
 		isShooting = false;
 	}
 
@@ -217,11 +205,14 @@ void AProjectOneCharacter::Roll()
 
 void AProjectOneCharacter::MoveReleased()
 {
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 	InputVector = FVector::ZeroVector;
 }
 
 void AProjectOneCharacter::JumpInput()
 {
+
 	if (!APAnim->isInAir && !APAnim->isRoll) {
 		Jump();
 		APAnim->isInAir = true;
@@ -235,6 +226,7 @@ void AProjectOneCharacter::Shooting(float tick)
 			FTimerHandle time_;//bulletCheck
 			if (Weapone->CurBulletCount <= 0)
 				return;
+			SoundComponent->PlayShotSound();
 			
 			//Spread Bullet
 			float RandPitch = FMath::RandRange(-(Weapone->Spread*0.5f), Weapone->Spread*0.5f);
@@ -302,8 +294,13 @@ void AProjectOneCharacter::LookUpAtRate(float Rate)
 
 void AProjectOneCharacter::MoveForward(float Value)
 {
+	if (Value) {
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
 	if ((Controller != NULL) && (Value != 0.0f) && !APAnim->isRoll)
 	{
+
 		InputVector.X = Value;
 
 		APAnim->Forward = Value * 100.0f;
@@ -320,6 +317,10 @@ void AProjectOneCharacter::MoveForward(float Value)
 
 void AProjectOneCharacter::MoveRight(float Value)
 {
+	if (Value) {
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
 	if ( (Controller != NULL) && (Value != 0.0f) &&!APAnim->isRoll)
 	{
 		InputVector.Y = Value;
