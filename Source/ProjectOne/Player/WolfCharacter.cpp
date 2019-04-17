@@ -3,7 +3,8 @@
 #include "WolfCharacter.h"
 #include "POComponents/PlayerAkComponent.h"
 #include "PlayerStatComponent.h"
-#include "Weapons/Pistol.h" 
+#include "Weapons/Pistol.h"
+
 AWolfCharacter::AWolfCharacter(){
 	SetResources();
 }
@@ -39,7 +40,7 @@ void AWolfCharacter::Evolution() {
 	GetMesh()->SetSkeletalMesh(SecondSkMesh);
 	GetMesh()->SetAnimInstanceClass(SecondAnimIns);
 	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
-	GetCapsuleComponent()->InitCapsuleSize(20.0f, 70.0f);
+	GetCapsuleComponent()->InitCapsuleSize(35.0f, 70.0f);
 	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
 
 	//8,0,2

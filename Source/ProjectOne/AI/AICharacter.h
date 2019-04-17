@@ -18,7 +18,8 @@ enum AIState
 {
 	Neutral,
 	Offensive,
-	Diffensive
+	Diffensive,
+	Guard
 };
 
 /**
@@ -32,6 +33,11 @@ class PROJECTONE_API AAICharacter : public AProjectOneCharacter
 
 public:
 	AAICharacter();
+
+	void SetResources() override;
+	void Evolution() override;
+
+
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float delta) override;
 	virtual void BeginPlay() override;
@@ -64,14 +70,18 @@ public:
 
 	MoveVec DirectionVec;
 	bool FirstCheck;
+	bool RigthCheck; //오른쪽 벡터에 장애물이 있는지
+	bool LeftCheck; // 왼쪽 벡터에 장애물이 있는지
 	bool IsMoving;
 
 	FTimerHandle  Delay;
+	FTimerHandle InitTime;
 
 	bool IsLookAround;
 	bool LeftEnd;
 	float LeftAngle;
 	float RightAngle;
+	int LookCount;
 
 	void LookAround();
 	void LookAroundStart();
@@ -94,6 +104,18 @@ public:
 	void MoveToLocation(FVector Location);
 
 	void Hide(AActor * Attacker);
+
+
+
+	bool MoveEnd;
+
+	void SetRandomLocation(); //아무것도 판단할 근거가 없을때 이동 경로 지정
+
+	void Attackted(AActor * Attacker);  //공격받았을때 판단함수
+	void FindPlayer(); //캐릭터를 발견했을때 판단
+
+
+	void InitTargetPlayer();
 
 };
 

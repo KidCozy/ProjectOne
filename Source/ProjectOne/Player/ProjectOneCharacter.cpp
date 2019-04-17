@@ -15,6 +15,7 @@
 #include "PaperSpriteComponent.h"
 #include "POComponents/PlayerAkComponent.h"
 #include "AkAudioDevice.h"
+#include "AI/AICharacter.h"
 
 
 void AProjectOneCharacter::PostInitializeComponents() {
@@ -38,7 +39,7 @@ void AProjectOneCharacter::SetResources() {
 	if (TEMP_ANIM.Succeeded())
 		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
 
-	
+
 }
 
 void AProjectOneCharacter::SetComponents()
@@ -59,7 +60,7 @@ void AProjectOneCharacter::SetInitWeapone()
 AProjectOneCharacter::AProjectOneCharacter()
 {
 	SetResources();
-	GetCapsuleComponent()->InitCapsuleSize(15.f, 32.0f);
+	GetCapsuleComponent()->InitCapsuleSize(24.0f, 32.0f);
 
 	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 	CharacterStat = CreateDefaultSubobject<UPlayerStatComponent>(TEXT("CharcterStat"));
@@ -92,6 +93,7 @@ AProjectOneCharacter::AProjectOneCharacter()
 
 	SoundComponent = CreateDefaultSubobject<UPlayerAkComponent>(TEXT("SoundComponent"));
 	SoundComponent->SetPlayer(this);
+
 
 	FollowCamera->SetRelativeLocation(FVector(-50.0f, 0, 0));
 
@@ -147,7 +149,7 @@ void AProjectOneCharacter::Tick(float delta) {
 void AProjectOneCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	FVector SpawnPos(FVector(8.0f, 0.0f, 2.0f));
+	FVector SpawnPos(8.0f, 0.0f, 2.0f);
 	Weapone = GetWorld()->SpawnActor<AWeapon>(SpawnPos, FRotator::ZeroRotator);
 	FAttachmentTransformRules AttachmerRules(EAttachmentRule::KeepRelative, false);
 	Weapone->SetOwner(this);
@@ -268,6 +270,10 @@ void AProjectOneCharacter::Hit(float Damage, AActor * Causer)
 		auto CauserPlayer = Cast<AProjectOneCharacter>(Causer);
 		CauserPlayer->Evolution();
 		Dead();
+
+		auto AI = Cast<AAICharacter>(Causer);
+		if (AI)
+			AI->TargetPlayer = NULL;
 	}
 	else
 		Hp = Hp - Damage;
@@ -363,6 +369,7 @@ FVector AProjectOneCharacter::GetCharacterToAimeVec()
 
 void AProjectOneCharacter::Dead()
 {
+	Destroy(this);
 	ABLOG_S(Warning);
 }
 

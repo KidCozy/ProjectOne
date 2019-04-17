@@ -75,14 +75,15 @@ void AAICharacter::Tick(float delta)
 	}
 	MoveCover();*/
 
-	MoveCover();
+	//MoveCover();
 
-	//MoveToLocation(FVector(1820.0f, -3520.0f, 226.0f));
+	//MoveToLocation(FVector(6000.0f, -500.0f, 98.0f));
 
 	//ABLOG(Warning,TEXT("TargetCoverPos : %f, %f ,%f"),TargetCoverPos.X, TargetCoverPos.Y, TargetCoverPos.Z )
 
 	//RightDash();
 	
+	Update();
 
 	//GetController()->SetControlRotation()
 	//GetController()->GetControlRotation();
@@ -90,13 +91,26 @@ void AAICharacter::Tick(float delta)
 	//GetController()
 
 	//AddControllerYawInput(Rate * 45.0f * GetWorld()->GetDeltaSeconds());
+
+	//ABLOG(Warning,TEXT("direction vec : %d"),DirectionVec);
+
+	ABLOG(Warning, TEXT("%d"), CurState);
+
 }
 
 void AAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//FVector SpawnPos(100.0f, 0.0f, 50.0f);
+	//Weapone = GetWorld()->SpawnActor<AWeapon>(SpawnPos, FRotator::ZeroRotator);
+	//FAttachmentTransformRules test(EAttachmentRule::KeepRelative, false);
+	//Weapone->SetOwner(this);
+	//Weapone->AttachToActor(this, test);
 
+
+	GetWorld()->GetTimerManager().SetTimer(Delay, this, &AAICharacter::CheckObstacle, 0.4f, false);
+	GetWorld()->GetTimerManager().SetTimer(InitTime, this, &AAICharacter::InitTargetPlayer, 4.0f, false);
 	const FRotator Rotation = Controller->GetControlRotation();
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
@@ -116,6 +130,7 @@ void AAICharacter::BeginPlay()
 	NextCover();
 	//Shot();
 
+	SetRandomLocation();
 
 }
 
@@ -137,13 +152,15 @@ void AAICharacter::Forward()
 	AddMovementInput(Direction, 1.0f);
 
 
-	CheckObstacle();
+	//GetWorld()->GetTimerManager().ClearTimer(Delay);
+
+	//CheckObstacle();
 	
 
-	if (DirectionVec == MoveVec::LeftVec)
+	/*if (DirectionVec == MoveVec::LeftVec)
 		Left();
 	else if (DirectionVec == MoveVec::RightVec)
-		RIght();
+		RIght();*/
 
 	
 }
@@ -164,6 +181,7 @@ void AAICharacter::Left()
 {
 
 	ABLOG_S(Warning);
+	APAnim->Right = -1.0f * 100.0f;
 	APAnim->Right = -1.0f * 100.0f;
 
 	// find out which way is right
@@ -209,21 +227,38 @@ void AAICharacter::LookAt(FVector LookPos)
 
 void AAICharacter::LookAround()
 {
-	ABLOG_S(Warning);
-	ABLOG(Warning, TEXT("LeftAngle : %f"), LeftAngle);
-	ABLOG(Warning, TEXT("RightAngle : %f"), RightAngle);
-	ABLOG(Warning, TEXT("Yaw : %f"), GetController()->GetControlRotation().Yaw);
-	if (!LeftEnd)
-	{
-		GetController()->SetControlRotation(FRotator(0, FMath::Lerp(GetController()->GetControlRotation().Yaw, LeftAngle, 0.005f), 0));
-		if (FMath::Abs(GetController()->GetControlRotation().Yaw - LeftAngle) < 2.0f)
-			LeftEnd = true;
-	}
-	else
-	{
-		GetController()->SetControlRotation(FRotator(0, FMath::Lerp(GetController()->GetControlRotation().Yaw, RightAngle, 0.005f), 0));
-		if (FMath::Abs(GetController()->GetControlRotation().Yaw - RightAngle) < 2.0f)
-			LeftEnd = false;
+	if (IsLookAround) {
+
+		ABLOG_S(Warning);
+		ABLOG(Warning, TEXT("LeftAngle : %f"), LeftAngle);
+		ABLOG(Warning, TEXT("RightAngle : %f"), RightAngle);
+		ABLOG(Warning, TEXT("Yaw : %f"), GetController()->GetControlRotation().Yaw);
+		if (!LeftEnd)
+		{
+			GetController()->SetControlRotation(FRotator(0, FMath::Lerp(GetController()->GetControlRotation().Yaw, LeftAngle, 0.05f), 0));
+			if (FMath::Abs(GetController()->GetControlRotation().Yaw - LeftAngle) < 20.0f) {
+				LeftEnd = true;
+				LookCount++;
+			}
+		}
+		else
+		{
+			GetController()->SetControlRotation(FRotator(0, FMath::Lerp(GetController()->GetControlRotation().Yaw, RightAngle, 0.05f), 0));
+			if (FMath::Abs(GetController()->GetControlRotation().Yaw - RightAngle) < 20.0f) {
+				LeftEnd = false;
+				LookCount++;
+			}
+		}
+
+		if (LookCount > 1)
+		{
+			LookCount = 0;
+			IsLookAround = false;
+			SetRandomLocation();
+			PastCovers.Empty();
+			MoveEnd = false;
+		}
+
 	}
 
 
@@ -284,14 +319,14 @@ void AAICharacter::Shooting(float tick)
 
 FVector AAICharacter::Prediction()
 {
-	//if (TargetPlayer == NULL)
-		//return FVector::ZeroVector;
+	if (TargetPlayer == NULL)
+		return FVector::ZeroVector;
 
 	
 	float distance = FVector::Distance(Weapone->GetActorLocation(), TargetPlayer->GetActorLocation());
 
 
-	float time = distance / 20.0f;
+	float time = distance / 5.0f;
 
 	ABLOG(Warning,TEXT("%f"),time)
 
@@ -314,35 +349,76 @@ void AAICharacter::Update()
 	switch (CurState)
 	{
 	case AIState::Neutral:
-		if (TargetPlayer != NULL) {
-			CurState = AIState::Offensive;
-			Shot();
-		}
+		//if (TargetLocationPos !=FVector::ZeroVector) {
+			if (!MoveEnd)
+				MoveToLocation(TargetLocationPos);
+			else
+				LookAround();
 
-		Forward();
+		//}
 
 		break;
 	case AIState::Offensive:
 
+		if (!isShooting)
+			Shot();
 
 		if (TargetPlayer == NULL)
 		{
 			Shot();
+			PastCovers.Empty();
+			MoveEnd = false;
+			SetRandomLocation();
 			CurState = AIState::Neutral;
 			return;
 		}
 
 
 		if (TargetPlayer != NULL) {
-			LookAt(TargetPlayer->GetActorLocation());
-
+			//LookAt(TargetPlayer->GetActorLocation());
+			LookAt(Prediction());
 			if (FVector::Distance(GetActorLocation(), TargetPlayer->GetActorLocation()) > 1500.0f)
 				Forward();
 			else
 				RIght();
+
+
+			if (Hp<40.0f && TargetPlayer->Hp > Hp)
+				CurState = AIState::Diffensive;
 		}
 		break;
 	case AIState::Diffensive:
+
+		if (TargetPlayer == NULL)
+		{
+			if(isShooting)
+			Shot();
+			PastCovers.Empty();
+			MoveEnd = false;
+			SetRandomLocation();
+			CurState = AIState::Neutral;
+			return;
+		}
+
+		if (TargetPlayer != NULL) {
+
+			LookAt(TargetPlayer->GetActorLocation());
+			Back();
+		}
+
+		break;
+	case AIState::Guard:
+		if (TargetPlayer != NULL) {
+		
+
+			if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) > 1500.0f)
+				MoveToLocation(TargetPlayer->GetActorLocation());
+			else
+				LookAt(TargetPlayer->GetActorLocation());
+		}
+		else {
+			CurState = AIState::Neutral;
+		}
 		break;
 	default:
 		break;
@@ -353,8 +429,11 @@ void AAICharacter::MoveCover()
 {
 	if (IsMoving)
 	{
-		//if(DirectionVec ==MoveVec::ForwardVec)
-		LookAt(TargetCoverPos);
+		if (DirectionVec == MoveVec::ForwardVec && RigthCheck && LeftCheck) {
+			LookAt(TargetCoverPos);
+			//ABLOG(Warning, TEXT("Look Target"));
+		}
+			//AICon->MoveToLocation(TargetCoverPos);
 		Forward();
 		CheckSafe();
 		ABLOG(Warning,TEXT("%f, %f, %f"),TargetCoverPos.X, TargetCoverPos.Y, TargetCoverPos.Z)
@@ -524,21 +603,29 @@ void AAICharacter::CheckSafe(FVector Destination)
 void AAICharacter::MoveToLocation(FVector Location)
 {
 	if (!CheckLocation(Location)) {
+
+
 		TargetLocationPos = Location;
 
 		ABLOG(Warning, TEXT("Cover : %d"),DetectedCovers.Num())
 		
 
 			if (DetectedCovers.Num() > 1) {
-				//LookAt(Location);
 				NextCover(Location);
-					MoveCover();
+				MoveCover();
 			}
 			else 
 			{
+				if(DirectionVec == MoveVec::ForwardVec && LeftCheck && RigthCheck)
 				LookAt(TargetLocationPos);
 					Forward();
+				//AICon->MoveToLocation(TargetLocationPos);
 			}
+	}
+	else
+	{
+		MoveEnd = true;
+		LookAroundStart();
 	}
 }
 
@@ -559,13 +646,13 @@ void AAICharacter::Hide(AActor * Attacker)
 
 	for (int i = 0; i < TargetCover->SafePos.Num(); i++) 
 	{
-		//DrawDebugLine(GetWorld(), Character->GetActorLocation() , TargetCover->SafePos[i], FColor::Green, false, 5.0f, 0, 1);
-		if (GetWorld()->LineTraceSingleByChannel(OutHit, Character->GetActorLocation(), TargetCover->SafePos[i], ECC_Visibility, CollisionParams))
+		//DrawDebugLine(GetWorld(), Character->FollowCamera->GetComponentLocation(), TargetCover->SafePos[i], FColor::Green, false, 5.0f, 0, 1);
+		if (GetWorld()->LineTraceSingleByChannel(OutHit, Character->FollowCamera->GetComponentLocation(), TargetCover->SafePos[i], ECC_Visibility, CollisionParams))
 		{
 			//DrawDebugLine(GetWorld(), Character->FollowCamera->GetComponentLocation(), TargetCover->SafePos[i], FColor::Green, false, 5.0f, 0, 1);
 			if (OutHit.bBlockingHit)
 			{
-				//DrawDebugLine(GetWorld(), Character->GetActorLocation(), TargetCover->SafePos[i], FColor::Red, false, 5.0f, 0, 1);
+				//DrawDebugLine(GetWorld(), Character->FollowCamera->GetComponentLocation(), TargetCover->SafePos[i], FColor::Red, false, 5.0f, 0, 1);
 				if (TargetCoverPos == FVector::ZeroVector)
 					TargetCoverPos = TargetCover->SafePos[i];
 
@@ -578,7 +665,117 @@ void AAICharacter::Hide(AActor * Attacker)
 	ABLOG(Warning, TEXT("TargetCoverPos :  %f , %f, %f"), TargetCoverPos.X, TargetCoverPos.Y, TargetCoverPos.Z);
 	if (TargetCoverPos != FVector::ZeroVector)
 		//IsMoving = true;
-		AICon->MoveToLocation(TargetCoverPos);
+		TargetLocationPos = TargetCoverPos;
+		//AICon->MoveToLocation(TargetCoverPos);
+}
+
+void AAICharacter::SetRandomLocation()
+{
+	LookAt(FVector(0.0f, 0.0f, 98.0f));
+	TargetLocationPos = FVector::ZeroVector;
+	Detected();
+
+
+	float rand = FMath::RandRange(4000.0f, 7000.0f);
+	FVector MaxLocation = GetActorForwardVector() * rand;
+
+	
+
+	for (int i = 0; i < DetectedCovers.Num(); i++)
+	{
+		if (TargetLocationPos == FVector::ZeroVector) {
+			TargetLocationPos = DetectedCovers[i]->SafePos[1];
+			continue;
+		}
+
+		if (FVector::Distance(GetActorLocation(), DetectedCovers[i]->GetActorLocation()) > FVector::Distance(GetActorLocation(), TargetLocationPos))
+		{
+			if(FVector::Distance(GetActorLocation(), TargetLocationPos)  < FVector::Distance(GetActorLocation(), MaxLocation))
+				TargetLocationPos = DetectedCovers[i]->SafePos[1];
+		}
+
+	}
+}
+
+void AAICharacter::Attackted(AActor * Attacker)
+{
+	switch (CurState)
+	{
+	case Neutral:
+		Hide(Attacker);
+		MoveEnd = false;
+		break;
+	default:
+		break;
+	}
+}
+
+void AAICharacter::FindPlayer()
+{
+
+	switch (CurState)
+	{
+	case Neutral:
+		if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) > 6000.0f)
+			return;
+		//if (!MoveEnd)
+		//	TargetLocationPos = TargetCoverPos;
+		//else
+		//{
+		else {
+			auto targetPlayer = Cast<AAICharacter>(TargetPlayer);
+
+			if (targetPlayer)
+			{
+				if (targetPlayer->TargetPlayer == this)
+					CurState = AIState::Offensive;
+				else
+					CurState = AIState::Guard;
+			}
+			else
+			{
+				CurState = AIState::Guard;
+			}
+		}
+		//}
+		break;
+	case Offensive:
+		break;
+	case Diffensive:
+		break;
+	case Guard:
+
+		auto targetPlayer = Cast<AAICharacter>(TargetPlayer);
+
+		if (targetPlayer)
+		{
+			if (targetPlayer->TargetPlayer == this)
+				CurState = AIState::Offensive;
+
+			if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) < 1500.0f)
+				CurState = AIState::Offensive;
+
+		}
+		else 
+		{
+			if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) < 1500.0f)
+				CurState = AIState::Offensive;
+		}
+
+				//if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) > 2000.0f)
+
+			break;
+	}
+}
+
+void AAICharacter::InitTargetPlayer()
+{
+	TargetPlayer = NULL;
+	Detected();
+
+
+	GetWorld()->GetTimerManager().SetTimer(InitTime, this, &AAICharacter::InitTargetPlayer, 4.0f, false);
+
 }
 
 
@@ -630,14 +827,15 @@ void AAICharacter::Detected()
 
 		ABLOG(Warning, TEXT("Bullet Name : %s"), *Bullet->GetName());
 
-		Hide(Bullet->GetOwner());
+		Attackted(Bullet->GetOwner());
+		//Hide(Bullet->GetOwner());
 	}
 
 
 	DetectedPlayers.Empty();
 	DetectedCovers.Empty();
 
-	TargetPlayer = NULL;
+	//TargetPlayer = NULL;
 	if (bResult)
 	{
 		int i = 0;
@@ -664,15 +862,18 @@ void AAICharacter::Detected()
 					if (!TargetPlayer)
 						TargetPlayer = Player;
 
-					if (FVector::Distance(GetActorLocation(), Player->GetActorLocation()) < FVector::Distance(GetActorLocation(), TargetPlayer->GetActorLocation()))
-					{
-						TargetPlayer =Player;
+					if (TargetPlayer) {
+						if (FVector::Distance(GetActorLocation(), Player->GetActorLocation()) < FVector::Distance(GetActorLocation(), TargetPlayer->GetActorLocation()))
+						{
+							TargetPlayer = Player;
+						}
 					}
 
 					i++;
 					//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Green, false, 0.2f, 0, 1);
 					//GEngine->AddOnScreenDebugMessage(i, 5.0f, FColor::Blue, *OverlapResult.GetActor()->GetName());
 					DetectedPlayers.AddUnique(Player);
+					FindPlayer();
 				}
 
 			}
@@ -743,14 +944,16 @@ void AAICharacter::CheckObstacle()
 {
 	FVector End;
 	FVector LeftVec;
+	FVector RightVec;
 
-	End = GetActorForwardVector() * 500.0f;
+	End = GetActorForwardVector() * 50.0f;
 	End = GetActorLocation() + End;
 
 	FHitResult OutHit;
 	FHitResult LeftHit;
 	FCollisionQueryParams CollisionParams;
 
+	ABLOG_S(Warning);
 
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, GetActorLocation(), End, ECC_Visibility, CollisionParams))
 	{
@@ -763,13 +966,13 @@ void AAICharacter::CheckObstacle()
 				//DrawDebugLine(GetWorld(), GetActorLocation(), End, FColor::Red, false, 1, 0, 1);
 
 				float tmp = GetActorForwardVector().Rotation().Yaw;
-				tmp += 5.0f;
+				tmp += 45.0f;
 				//End = (GetActorForwardVector() + GetActorRightVector()) * 500.0f;
 				End = FRotator(0.0f, tmp, 0.0f).Vector().GetSafeNormal()*550.f;
 				End = GetActorLocation() + End;
 
 				tmp = GetActorForwardVector().Rotation().Yaw;
-				tmp -= 5.0f;
+				tmp -= 45.0f;
 				LeftVec = FRotator(0.0f, tmp, 0.0f).Vector().GetSafeNormal()*550.f;
 				LeftVec = GetActorLocation() + LeftVec;
 
@@ -791,17 +994,25 @@ void AAICharacter::CheckObstacle()
 								//	ABLOG(Warning, TEXT("right and left same"));
 									float rand = FMath::RandRange(0, 1);
 									//ABLOG(Warning, TEXT("Rand : %f"), rand);
-									if (rand > 0.5f)
+									if (rand > 0.5f) {
 										DirectionVec = MoveVec::RightVec;
-									else
+										LookAt(End);
+									}
+									else {
 										DirectionVec = MoveVec::LeftVec;
+										LookAt(LeftVec);
+									}
 								}
 								else
 								{
-									if (OutHit.Distance > LeftHit.Distance)
+									if (OutHit.Distance > LeftHit.Distance) {
 										DirectionVec = MoveVec::RightVec;
-									else
+										LookAt(End);
+									}
+									else {
 										DirectionVec = MoveVec::LeftVec;
+										LookAt(LeftVec);
+									}
 								}
 
 							}
@@ -809,6 +1020,7 @@ void AAICharacter::CheckObstacle()
 						else
 						{
 							DirectionVec = MoveVec::LeftVec;
+							LookAt(LeftVec);
 						}
 					}
 				}
@@ -819,17 +1031,22 @@ void AAICharacter::CheckObstacle()
 						//왼쪽만 맞았을때
 						//ABLOG(Warning, TEXT("left only"));
 						DirectionVec = MoveVec::RightVec;
+						LookAt(End);
 					}
 					else
 					{
-						//둘다 안맞았을때
-					//	ABLOG(Warning, TEXT("not"));
-						float rand = FMath::RandRange(0, 1);
-						//ABLOG(Warning, TEXT("Rand : %f"), rand);
-						if (rand > 0.5f)
-							DirectionVec = MoveVec::RightVec;
-						else
-							DirectionVec = MoveVec::LeftVec;
+					//	//둘다 안맞았을때
+					////	ABLOG(Warning, TEXT("not"));
+					//	float rand = FMath::RandRange(0, 1);
+					//	//ABLOG(Warning, TEXT("Rand : %f"), rand);
+					//	if (rand > 0.5f) {
+					//		DirectionVec = MoveVec::RightVec;
+					//		LookAt(End);
+					//	}
+					//	else {
+					//		DirectionVec = MoveVec::LeftVec;
+					//		LookAt(LeftVec);
+					//	}
 					}
 				}
 
@@ -844,11 +1061,92 @@ void AAICharacter::CheckObstacle()
 		FirstCheck = false;
 		DirectionVec = MoveVec::ForwardVec;
 	}
+
+	float tmp = GetActorForwardVector().Rotation().Yaw;
+	tmp += 60.0f;
+	//End = (GetActorForwardVector() + GetActorRightVector()) * 500.0f;
+	RightVec = FRotator(0.0f, tmp, 0.0f).Vector().GetSafeNormal()*550.f;
+	RightVec = GetActorLocation() + End;
+
+	tmp = GetActorForwardVector().Rotation().Yaw;
+	tmp -= 60.0f;
+	LeftVec = FRotator(0.0f, tmp, 0.0f).Vector().GetSafeNormal()*550.f;
+	LeftVec = GetActorLocation() + LeftVec;
+
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, GetActorLocation(), RightVec, ECC_Visibility, CollisionParams))
+	{
+		if (OutHit.bBlockingHit)
+		{
+			RigthCheck = false;
+		}
+	}
+	else
+	{
+		RigthCheck = true;
+	}
+
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, GetActorLocation(), LeftVec, ECC_Visibility, CollisionParams))
+	{
+		if (OutHit.bBlockingHit)
+		{
+			LeftCheck = false;
+		}
+	}
+	else
+	{
+		LeftCheck = true;
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(Delay, this, &AAICharacter::CheckObstacle, 0.4f, false);
+
 }
 
 bool AAICharacter::CheckLocation(FVector Pos)
 {
 	return FVector::Distance(Pos, GetActorLocation()) < 50.0f;
+}
+
+void AAICharacter::SetResources()
+{
+	static ConstructorHelpers::FClassFinder<UCameraShake> CSHAKE_FIRE(TEXT("Blueprint'/Game/ScreenFX/CShake_Fire.CShake_Fire_C'"));
+	if (CSHAKE_FIRE.Succeeded())
+		CShakeList.Add(CSHAKE_FIRE.Class);
+
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_MANEQUIN(TEXT("SkeletalMesh'/Game/Animations/Exper/SK_Wolf1_Idle.SK_Wolf1_Idle_dog0F'"));
+	if (SK_MANEQUIN.Succeeded())
+		GetMesh()->SetSkeletalMesh(SK_MANEQUIN.Object);
+
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -32.0f), FRotator(0.0f, -90.0f, 0.0f));
+
+	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/Exper/Wolf1_AnimBP.Wolf1_AnimBP_C'"));
+	if (TEMP_ANIM.Succeeded())
+		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
+
+
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_Sec(TEXT("SkeletalMesh'/Game/Animations/Wolf2/SK_Wolf2_Idle.SK_Wolf2_Idle_Box001'"));
+	if (SK_Sec.Succeeded())
+		SecondSkMesh = SK_Sec.Object;
+
+	static ConstructorHelpers::FClassFinder<UAnimInstance> ANIM_Sec(TEXT("AnimBlueprint'/Game/Animations/Wolf2/BP_Wolf2Anim.BP_Wolf2Anim_C'"));
+	if (ANIM_Sec.Succeeded()) {
+		SecondAnimIns = ANIM_Sec.Class;
+	}
+}
+
+void AAICharacter::Evolution()
+{
+	GetMesh()->SetSkeletalMesh(SecondSkMesh);
+	GetMesh()->SetAnimInstanceClass(SecondAnimIns);
+	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+	GetCapsuleComponent()->InitCapsuleSize(35.0f, 69.0f);
+	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
+
+	//8,0,2
+	//65,-10,25
+	Weapone->SetActorRelativeLocation(FVector(65.0f, -10.0f, 25.0f));
+	APAnim->Evolution();
+
+	Hp = 100.0f;
 }
 
 void AAICharacter::PostInitializeComponents()
@@ -878,7 +1176,7 @@ AAICharacter::AAICharacter()
 	if (AI_ANI.Succeeded())
 		GetMesh()->SetAnimInstanceClass(AI_ANI.Class);
 
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	//GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 
@@ -920,4 +1218,6 @@ AAICharacter::AAICharacter()
 	DirectionVec = MoveVec::ForwardVec;
 	FirstCheck = false;
 	Hp = 100.0f;
+
+	SetResources();
 }

@@ -46,6 +46,8 @@ ABullet::ABullet()
 		DecalMaterialinstance = DECALINS.Object;
 	}
 
+	Mesh->SetCollisionProfileName(TEXT("Bullet"));
+
 }
 
 void ABullet::PostInitializeComponents()
@@ -79,13 +81,16 @@ void ABullet::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor * 
 	ABLOG(Warning, TEXT("Owner : %s"), *(GetOwner()->GetName()));
 	ABLOG(Warning, TEXT("OtherActor : %s"), *(OtherActor->GetName()));
 
-	ABCHECK(IsValid(Cast<AProjectOneCharacter>(OtherActor)));
+	//ABCHECK(IsValid(Cast<AProjectOneCharacter>(OtherActor)));
 	auto Character = Cast<AProjectOneCharacter>(OtherActor);
-	Character->Hit(20.0f, GetOwner());
+	if (Character)
+		Character->Hit(5.0f, GetOwner());
 
-	ABCHECK(IsValid(Cast<AAICharacter>(OtherActor)));
+	//ABCHECK(IsValid(Cast<AAICharacter>(OtherActor)));
 	auto AI = Cast<AAICharacter>(OtherActor);
-	AI->Hide(GetOwner());
+	if (AI)
+		AI->Hit(10.0f, GetOwner());
+
 
 
 	Destroy(this);
