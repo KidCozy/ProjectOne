@@ -10,6 +10,8 @@ ABullet::ABullet()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	Col = CreateDefaultSubobject<USphereComponent>(TEXT("SPHERE"));
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+
 	RootComponent = Mesh;
 
 	Col->SetupAttachment(RootComponent);
@@ -48,6 +50,9 @@ ABullet::ABullet()
 
 	Mesh->SetCollisionProfileName(TEXT("Bullet"));
 
+
+	ProjectileMovement->ProjectileGravityScale = 0.0f;
+	ProjectileMovement->InitialSpeed = 3000.0f;
 }
 
 void ABullet::PostInitializeComponents()
@@ -60,13 +65,15 @@ void ABullet::PostInitializeComponents()
 void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	AddActorWorldOffset(DirectionVector * Speed);
+	//AddActorWorldOffset(DirectionVector * Speed);
+
+
 
 	LifeTime += DeltaTime;
 	if (LifeTime > 5.0f)
 		Destroy(this);
 
-	ABLOG(Warning, TEXT("Speed : %f, %f, %f"), GetVelocity().X, GetVelocity().Y, GetVelocity().Z);
+	
 }
 
 void ABullet::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OherCcomp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
@@ -102,5 +109,6 @@ void ABullet::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor * 
 void ABullet::SetDirection(FVector direction)
 {
 	DirectionVector = direction;
+	SetActorRotation(direction.Rotation());
 }
 

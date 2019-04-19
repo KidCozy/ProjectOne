@@ -149,6 +149,10 @@ void AAICharacter::Forward()
 
 	// get forward vector
 	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+	ABLOG(Warning, TEXT("Direction Vec : %f, %f, %f"), Direction.X, Direction.Y, Direction.Z);
+
+	ABLOG(Warning, TEXT("Character Speed : %f, %f, %f"), GetVelocity().X, GetVelocity().Y, GetVelocity().Z);
 	AddMovementInput(Direction, 1.0f);
 
 
@@ -295,13 +299,13 @@ void AAICharacter::Shooting(float tick)
 			float RandYaw = FMath::RandRange(-(Weapone->Spread*0.5f), Weapone->Spread*0.5f);
 
 			FRotator SpreadRotation = FRotator(
-				GetCharacterToAimeVec().Rotation().Pitch + RandPitch,
-				//GetCharacterToAimeVec().Rotation().Pitch,
-				//GetCharacterToAimeVec().Rotation().Yaw, 0.0f);
-				GetCharacterToAimeVec().Rotation().Yaw + RandYaw, 0.0f);
+				//GetCharacterToAimeVec().Rotation().Pitch + RandPitch,
+				GetCharacterToAimeVec().Rotation().Pitch,
+				GetCharacterToAimeVec().Rotation().Yaw, 0.0f);
+				//GetCharacterToAimeVec().Rotation().Yaw + RandYaw, 0.0f);
 
 			FVector SpreadVec = SpreadRotation.Vector().GetSafeNormal();
-			Weapone->Shot(Weapone->GetActorLocation(), SpreadVec, ScratchNormal);
+			Weapone->Shot(Weapone->GetActorLocation(), SpreadRotation, ScratchNormal);
 
 
 			//Recol
@@ -339,17 +343,23 @@ FVector AAICharacter::Prediction()
 
 	//float time = distance / 5.0f;
 
-	ABLOG(Warning, TEXT("BUllet vector size :  %f"), (SpreadVec * 30.0f).Size());
+	ABLOG(Warning, TEXT("BUllet vector size :  %f, %f, %f"), (SpreadVec * 3000.0f).X, (SpreadVec * 3000.0f).Y, (SpreadVec * 3000.0f).Z);
 
-	float time = distance / 5.0f;
+	float test = (TargetPlayer->GetVelocity() - (SpreadVec * 3000.0f)).Size();
+
+	ABLOG(Warning, TEXT("Velocity : %f, %f ,%f"), TargetPlayer->GetVelocity().X, TargetPlayer->GetVelocity().Y, TargetPlayer->GetVelocity().Z);
+
+	ABLOG(Warning, TEXT("test : %f"), test);
+
+	float time = distance / test;
 
 	//float time = FVector::DotProduct((TargetPlayer->GetActorLocation() - Weapone->GetActorLocation()), SpreadVec * Weapone->Speed);
 
-	ABLOG(Warning,TEXT("%f"),time)
+	ABLOG(Warning,TEXT("Time :  %f"),time)
 
-	FVector LookVec = TargetPlayer->GetActorLocation() + time * TargetPlayer->GetCharacterMovement()->GetLastInputVector().GetSafeNormal();
+	FVector LookVec = TargetPlayer->GetActorLocation() + time * TargetPlayer->GetVelocity();
 
-	ABLOG(Warning, TEXT("Input vec : %f, %f, %f"), TargetPlayer->GetCharacterMovement()->GetLastInputVector().GetSafeNormal().X, TargetPlayer->GetCharacterMovement()->GetLastInputVector().GetSafeNormal().Y, TargetPlayer->GetCharacterMovement()->GetLastInputVector().GetSafeNormal().Z);
+	ABLOG(Warning, TEXT("Input vec : %f, %f, %f"), TargetPlayer->GetCharacterMovement()->GetLastInputVector().GetSafeNormal().X *600, TargetPlayer->GetCharacterMovement()->GetLastInputVector().GetSafeNormal().Y *600, TargetPlayer->GetCharacterMovement()->GetLastInputVector().GetSafeNormal().Z * 600);
 
 	ABLOG(Warning, TEXT("LOOK Pos: %f, %f, %f"), LookVec.X, LookVec.Y, LookVec.Z);
 
@@ -421,7 +431,7 @@ void AAICharacter::Update()
 
 			if (TargetPlayer != NULL) {
 
-				LookAt(TargetPlayer->GetActorLocation());
+				//LookAt(TargetPlayer->GetActorLocation());
 				Back();
 			}
 

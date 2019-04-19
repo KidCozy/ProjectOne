@@ -49,13 +49,13 @@ void AWeapon::Tick(float DeltaTime)
 
 }
 
-void AWeapon::Shot(FVector SpawnPos, FVector Direction, FVector Nolmal)
+void AWeapon::Shot(FVector SpawnPos, FRotator Direction, FVector Nolmal)
 {
 	if (CurBulletCount > 0) {
 
-		auto Bullet = GetWorld()->SpawnActor<ABullet>(SpawnPos, FRotator::ZeroRotator);
+		auto Bullet = GetWorld()->SpawnActor<ABullet>(SpawnPos, Direction);
 		if (Bullet != NULL) {
-			Bullet->SetDirection(Direction);
+			//Bullet->SetDirection(Direction);
 			Bullet->Speed = Speed;
 			Bullet->SetOwner(GetOwner());
 			Bullet->Normal = Nolmal;

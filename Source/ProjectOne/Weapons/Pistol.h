@@ -28,7 +28,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 
-	void Shot(FVector SpawnPos, FVector Direction, FVector Normal);
+	void Shot(FVector SpawnPos, FRotator Direction, FVector Normal);
 
 	void ReLoad();
 

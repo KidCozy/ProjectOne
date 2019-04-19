@@ -234,7 +234,7 @@ void AProjectOneCharacter::Shooting(float tick)
 				GetCharacterToAimeVec().Rotation().Yaw + RandYaw, 0.0f);
 
 			FVector SpreadVec = SpreadRotation.Vector().GetSafeNormal();
-			Weapone->Shot(Weapone->GetActorLocation(), SpreadVec, ScratchNormal);
+			Weapone->Shot(Weapone->GetActorLocation(), SpreadRotation, ScratchNormal);
 
 			//shake
 			auto GameInstance = Cast<UProjectOneGameInstance>(GetGameInstance());

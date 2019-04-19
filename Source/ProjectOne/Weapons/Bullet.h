@@ -42,6 +42,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Mesh)
 	UStaticMeshComponent * Mesh;
 
+	UPROPERTY(VisibleAnywhere, Category = MoveMent)
+	UProjectileMovementComponent * ProjectileMovement;
+
 	UPROPERTY(VisibleAnywhere, Category = Matareal)
 	UMaterial * Material;
 
