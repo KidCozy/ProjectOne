@@ -255,7 +255,7 @@ void AAICharacter::LookAround()
 			LookCount = 0;
 			IsLookAround = false;
 			SetRandomLocation();
-			PastCovers.Empty();
+			//PastCovers.Empty();
 			MoveEnd = false;
 		}
 
@@ -322,11 +322,28 @@ FVector AAICharacter::Prediction()
 	if (TargetPlayer == NULL)
 		return FVector::ZeroVector;
 
+
+	FRotator SpreadRotation = FRotator(
+		GetCharacterToAimeVec().Rotation().Pitch ,
+		//GetCharacterToAimeVec().Rotation().Pitch,
+		//GetCharacterToAimeVec().Rotation().Yaw, 0.0f);
+		GetCharacterToAimeVec().Rotation().Yaw, 0.0f);
+
+	FVector SpreadVec = SpreadRotation.Vector().GetSafeNormal();
+
+
+
 	
 	float distance = FVector::Distance(Weapone->GetActorLocation(), TargetPlayer->GetActorLocation());
 
 
+	//float time = distance / 5.0f;
+
+	ABLOG(Warning, TEXT("BUllet vector size :  %f"), (SpreadVec * 30.0f).Size());
+
 	float time = distance / 5.0f;
+
+	//float time = FVector::DotProduct((TargetPlayer->GetActorLocation() - Weapone->GetActorLocation()), SpreadVec * Weapone->Speed);
 
 	ABLOG(Warning,TEXT("%f"),time)
 
@@ -346,83 +363,88 @@ void AAICharacter::Update()
 	
 	ABLOG(Warning, TEXT("isShoting :   %d"), isShooting);
 
-	switch (CurState)
-	{
-	case AIState::Neutral:
-		//if (TargetLocationPos !=FVector::ZeroVector) {
+	ABLOG(Warning, TEXT("TargetLocation :   %f, %f, %f"), TargetLocationPos.X, TargetLocationPos.Y, TargetLocationPos.Z);
+	if (IsAlive) {
+		switch (CurState)
+		{
+		case AIState::Neutral:
+			//if (TargetLocationPos !=FVector::ZeroVector) {
 			if (!MoveEnd)
 				MoveToLocation(TargetLocationPos);
 			else
 				LookAround();
 
-		//}
+			//}
 
-		break;
-	case AIState::Offensive:
+			break;
+		case AIState::Offensive:
 
-		if (!isShooting)
-			Shot();
+			if (!isShooting)
+				Shot();
 
-		if (TargetPlayer == NULL)
-		{
-			Shot();
-			PastCovers.Empty();
-			MoveEnd = false;
-			SetRandomLocation();
-			CurState = AIState::Neutral;
-			return;
-		}
-
-
-		if (TargetPlayer != NULL) {
-			//LookAt(TargetPlayer->GetActorLocation());
-			LookAt(Prediction());
-			if (FVector::Distance(GetActorLocation(), TargetPlayer->GetActorLocation()) > 1500.0f)
-				Forward();
-			else
-				RIght();
+			if (TargetPlayer == NULL)
+			{
+				Shot();
+				PastCovers.Empty();
+				MoveEnd = false;
+				SetRandomLocation();
+				CurState = AIState::Neutral;
+				return;
+			}
 
 
-			if (Hp<40.0f && TargetPlayer->Hp > Hp)
-				CurState = AIState::Diffensive;
-		}
-		break;
-	case AIState::Diffensive:
+			if (TargetPlayer != NULL) {
+				//LookAt(TargetPlayer->GetActorLocation());
+				LookAt(Prediction());
+				if (FVector::Distance(GetActorLocation(), TargetPlayer->GetActorLocation()) > 1500.0f)
+					Forward();
+				else
+					RIght();
 
-		if (TargetPlayer == NULL)
-		{
-			if(isShooting)
-			Shot();
-			PastCovers.Empty();
-			MoveEnd = false;
-			SetRandomLocation();
-			CurState = AIState::Neutral;
-			return;
-		}
 
-		if (TargetPlayer != NULL) {
+				if (Hp<40.0f && TargetPlayer->Hp > Hp)
+					CurState = AIState::Diffensive;
+			}
+			break;
+		case AIState::Diffensive:
 
-			LookAt(TargetPlayer->GetActorLocation());
-			Back();
-		}
+			if (TargetPlayer == NULL)
+			{
+				if (isShooting)
+					Shot();
+				PastCovers.Empty();
+				MoveEnd = false;
+				SetRandomLocation();
+				CurState = AIState::Neutral;
+				return;
+			}
 
-		break;
-	case AIState::Guard:
-		if (TargetPlayer != NULL) {
-		
+			if (TargetPlayer != NULL) {
 
-			if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) > 1500.0f)
-				MoveToLocation(TargetPlayer->GetActorLocation());
-			else
 				LookAt(TargetPlayer->GetActorLocation());
+				Back();
+			}
+
+			break;
+		case AIState::Guard:
+			if (TargetPlayer != NULL) {
+
+
+				if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) > 1500.0f)
+					MoveToLocation(TargetPlayer->GetActorLocation());
+				else
+					LookAt(TargetPlayer->GetActorLocation());
+			}
+			else {
+				CurState = AIState::Neutral;
+			}
+			break;
+		default:
+			break;
 		}
-		else {
-			CurState = AIState::Neutral;
-		}
-		break;
-	default:
-		break;
 	}
+	else
+		isShooting = false;
 }
 
 void AAICharacter::MoveCover()
@@ -586,7 +608,7 @@ void AAICharacter::CheckSafe()
 	if (!IsMoving)
 		return;
 
-	if (FVector::Distance(TargetCoverPos, GetActorLocation()) < 150.0f) {
+	if (FVector::Distance(TargetCoverPos, GetActorLocation()) < 170.0f) {
 		TargetCoverPos = FVector::ZeroVector;
 		LookAt(TargetLocationPos);
 		IsMoving = false;
@@ -610,7 +632,7 @@ void AAICharacter::MoveToLocation(FVector Location)
 		ABLOG(Warning, TEXT("Cover : %d"),DetectedCovers.Num())
 		
 
-			if (DetectedCovers.Num() > 1) {
+			if (DetectedCovers.Num() > 1 && TargetCover) {
 				NextCover(Location);
 				MoveCover();
 			}
@@ -681,20 +703,28 @@ void AAICharacter::SetRandomLocation()
 
 	
 
-	for (int i = 0; i < DetectedCovers.Num(); i++)
-	{
-		if (TargetLocationPos == FVector::ZeroVector) {
-			TargetLocationPos = DetectedCovers[i]->SafePos[1];
-			continue;
-		}
-
-		if (FVector::Distance(GetActorLocation(), DetectedCovers[i]->GetActorLocation()) > FVector::Distance(GetActorLocation(), TargetLocationPos))
+	if (DetectedCovers.Num() > 1) {
+		for (int i = 0; i < DetectedCovers.Num(); i++)
 		{
-			if(FVector::Distance(GetActorLocation(), TargetLocationPos)  < FVector::Distance(GetActorLocation(), MaxLocation))
-				TargetLocationPos = DetectedCovers[i]->SafePos[1];
-		}
+			if (PastCovers.Contains(DetectedCovers[i]))
+				continue;
 
+			if (DetectedCovers[i]->SafePos.Num() > 0) {
+				if (TargetLocationPos == FVector::ZeroVector) {
+
+					TargetLocationPos = DetectedCovers[i]->SafePos[1];
+					continue;
+				}
+
+				if (FVector::Distance(GetActorLocation(), DetectedCovers[i]->GetActorLocation()) > FVector::Distance(GetActorLocation(), TargetLocationPos))
+				{
+					if (FVector::Distance(GetActorLocation(), TargetLocationPos) < FVector::Distance(GetActorLocation(), MaxLocation))
+						TargetLocationPos = DetectedCovers[i]->SafePos[1];
+				}
+			}
+		}
 	}
+	TargetLocationPos = FVector(MaxLocation.X, MaxLocation.Y, 39.0);
 }
 
 void AAICharacter::Attackted(AActor * Attacker)
@@ -827,6 +857,8 @@ void AAICharacter::Detected()
 
 		ABLOG(Warning, TEXT("Bullet Name : %s"), *Bullet->GetName());
 
+
+
 		Attackted(Bullet->GetOwner());
 		//Hide(Bullet->GetOwner());
 	}
@@ -844,38 +876,39 @@ void AAICharacter::Detected()
 			AProjectOneCharacter * Player = Cast<AProjectOneCharacter>(OverlapResult.GetActor());
 			ACover * Cover = Cast<ACover>(OverlapResult.GetActor());
 			if (Player) {
-
-				if (GetWorld()->LineTraceSingleByChannel(OutHit, FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), ECC_Visibility, CollisionParams))
-				{
-					if (OutHit.bBlockingHit)
+				if (Player->IsAlive) {
+					if (GetWorld()->LineTraceSingleByChannel(OutHit, FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), ECC_Visibility, CollisionParams))
 					{
-						//ABLOG_S(Warning);
-						//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Red, false, 0.2f, 0, 1);
-						DetectedPlayers.Remove(Player);
-						/*i++;
-						DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation(), Player->GetActorLocation(), FColor::Green, false, 1, 0, 1);
-						GEngine->AddOnScreenDebugMessage(i, 5.0f, FColor::Blue, *OverlapResult.GetActor()->GetName());*/
-					}
-				}
-				else
-				{
-					if (!TargetPlayer)
-						TargetPlayer = Player;
-
-					if (TargetPlayer) {
-						if (FVector::Distance(GetActorLocation(), Player->GetActorLocation()) < FVector::Distance(GetActorLocation(), TargetPlayer->GetActorLocation()))
+						if (OutHit.bBlockingHit)
 						{
-							TargetPlayer = Player;
+							//ABLOG_S(Warning);
+							//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Red, false, 0.2f, 0, 1);
+							DetectedPlayers.Remove(Player);
+							/*i++;
+							DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation(), Player->GetActorLocation(), FColor::Green, false, 1, 0, 1);
+							GEngine->AddOnScreenDebugMessage(i, 5.0f, FColor::Blue, *OverlapResult.GetActor()->GetName());*/
 						}
 					}
+					else
+					{
+						if (!TargetPlayer)
+							TargetPlayer = Player;
 
-					i++;
-					//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Green, false, 0.2f, 0, 1);
-					//GEngine->AddOnScreenDebugMessage(i, 5.0f, FColor::Blue, *OverlapResult.GetActor()->GetName());
-					DetectedPlayers.AddUnique(Player);
-					FindPlayer();
+						if (TargetPlayer) {
+							if (FVector::Distance(GetActorLocation(), Player->GetActorLocation()) < FVector::Distance(GetActorLocation(), TargetPlayer->GetActorLocation()))
+							{
+								TargetPlayer = Player;
+							}
+						}
+
+						i++;
+						//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Player->GetActorLocation(), FColor::Green, false, 0.2f, 0, 1);
+						//GEngine->AddOnScreenDebugMessage(i, 5.0f, FColor::Blue, *OverlapResult.GetActor()->GetName());
+						DetectedPlayers.AddUnique(Player);
+						FindPlayer();
+					}
+
 				}
-
 			}
 
 			if (Cover)
@@ -927,13 +960,13 @@ void AAICharacter::Detected()
 	//	GEngine->AddOnScreenDebugMessage(i, 1.0f, FColor::Blue, *DetectedPlayers[i]->GetName());
 	//}
 
-	//for (int i = 0; i < DetectedCovers.Num(); i++) {
-		//GEngine->AddOnScreenDebugMessage(i, 1.0f, FColor::Blue, *DetectedCovers[i]->GetName());
-	//}
+	for (int i = 0; i < DetectedCovers.Num(); i++) {
+		GEngine->AddOnScreenDebugMessage(i, 1.0f, FColor::Blue, *DetectedCovers[i]->GetName());
+	}
 
 	if (PastCovers.Num() > 0) {
-		for (int i = 0; i < PastCovers.Num(); i++) {
-			GEngine->AddOnScreenDebugMessage(i, 1.0f, FColor::Blue, *PastCovers[i]->GetName());
+		for (int i = 4; i < PastCovers.Num()+4; i++) {
+			GEngine->AddOnScreenDebugMessage(i, 1.0f, FColor::Yellow, *PastCovers[i-4]->GetName());
 		}
 	}
 
@@ -1138,8 +1171,9 @@ void AAICharacter::Evolution()
 	GetMesh()->SetSkeletalMesh(SecondSkMesh);
 	GetMesh()->SetAnimInstanceClass(SecondAnimIns);
 	APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
-	GetCapsuleComponent()->InitCapsuleSize(35.0f, 69.0f);
+
 	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
+	GetCapsuleComponent()->SetCapsuleSize(35.0f, 70.0f);
 
 	//8,0,2
 	//65,-10,25

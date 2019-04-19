@@ -38,14 +38,16 @@ public:
 	UPROPERTY()
 	class AWeapon* Weapone;
 
-	
-	UPROPERTY()
-	class UPlayerAkComponent* SoundComponent;
-
 	UPROPERTY()
 	float Hp;
 
 	void Hit(float Damage, AActor * Causer);
+
+	bool IsAlive;
+
+	FTimerHandle DeadTimer;
+
+	int DeadTime;
 
 protected: // protected 함수 영역
 	

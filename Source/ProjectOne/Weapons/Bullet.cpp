@@ -65,6 +65,8 @@ void ABullet::Tick(float DeltaTime)
 	LifeTime += DeltaTime;
 	if (LifeTime > 5.0f)
 		Destroy(this);
+
+	ABLOG(Warning, TEXT("Speed : %f, %f, %f"), GetVelocity().X, GetVelocity().Y, GetVelocity().Z);
 }
 
 void ABullet::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OherCcomp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)

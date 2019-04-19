@@ -19,7 +19,8 @@ enum AIState
 	Neutral,
 	Offensive,
 	Diffensive,
-	Guard
+	Guard,
+	Dead
 };
 
 /**

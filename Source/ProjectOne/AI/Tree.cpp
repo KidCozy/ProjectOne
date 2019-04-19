@@ -4,18 +4,18 @@
 
 void ATree::BeginPlay()
 {
-	Super::BeginPlay();
 
 
 
-	SafePos.Add(FVector(GetActorLocation().X, GetActorLocation().Y + 120.0f, 98.0f));
-	SafePos.Add(FVector(GetActorLocation().X+120.0f, GetActorLocation().Y + 120.0f, 98.0f));
-	SafePos.Add(FVector(GetActorLocation().X - 120.0f, GetActorLocation().Y + 120.0f, 98.0f));
-	SafePos.Add(FVector(GetActorLocation().X, GetActorLocation().Y - 120.0f, 98.0f));
-	SafePos.Add(FVector(GetActorLocation().X+120.0f, GetActorLocation().Y - 120.0f, 98.0f));
-	SafePos.Add(FVector(GetActorLocation().X - 120.0f, GetActorLocation().Y - 120.0f, 98.0f));
-	SafePos.Add(FVector(GetActorLocation().X + 120.0f, GetActorLocation().Y, 98.0f));
-	SafePos.Add(FVector(GetActorLocation().X - 120.0f, GetActorLocation().Y, 98.0f));
+
+	SafePos.Add(FVector(GetActorLocation().X, GetActorLocation().Y + 120.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X+120.0f, GetActorLocation().Y + 120.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X - 120.0f, GetActorLocation().Y + 120.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X, GetActorLocation().Y - 120.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X+120.0f, GetActorLocation().Y - 120.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X - 120.0f, GetActorLocation().Y - 120.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X + 120.0f, GetActorLocation().Y, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X - 120.0f, GetActorLocation().Y, 34.0f));
 
 
 }

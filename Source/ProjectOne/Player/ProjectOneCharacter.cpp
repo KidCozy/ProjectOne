@@ -13,8 +13,6 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PaperSpriteComponent.h"
-#include "POComponents/PlayerAkComponent.h"
-#include "AkAudioDevice.h"
 #include "AI/AICharacter.h"
 
 
@@ -25,19 +23,19 @@ void AProjectOneCharacter::PostInitializeComponents() {
 
 // *** 리소스 로드 (초기화) ***
 void AProjectOneCharacter::SetResources() {
-	static ConstructorHelpers::FClassFinder<UCameraShake> CSHAKE_FIRE(TEXT("Blueprint'/Game/ScreenFX/CShake_Fire.CShake_Fire_C'"));
-	if (CSHAKE_FIRE.Succeeded())
-		CShakeList.Add(CSHAKE_FIRE.Class);
+	//static ConstructorHelpers::FClassFinder<UCameraShake> CSHAKE_FIRE(TEXT("Blueprint'/Game/ScreenFX/CShake_Fire.CShake_Fire_C'"));
+	//if (CSHAKE_FIRE.Succeeded())
+	//	CShakeList.Add(CSHAKE_FIRE.Class);
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> ChildChracter(TEXT("SkeletalMesh'/Game/Animations/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
-	if (ChildChracter.Succeeded())
-		GetMesh()->SetSkeletalMesh(ChildChracter.Object);
+	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> ChildChracter(TEXT("SkeletalMesh'/Game/Animations/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
+	//if (ChildChracter.Succeeded())
+	//	GetMesh()->SetSkeletalMesh(ChildChracter.Object);
 
-	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -32.0f), FRotator(0.0f, -90.0f, 0.0f));
+	//GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -32.0f), FRotator(0.0f, -90.0f, 0.0f));
 
-	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/AnimationBlueprint/PlayerCharacter_AnimBP.PlayerCharacter_AnimBP_C'"));
-	if (TEMP_ANIM.Succeeded())
-		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
+	//static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/AnimationBlueprint/PlayerCharacter_AnimBP.PlayerCharacter_AnimBP_C'"));
+	//if (TEMP_ANIM.Succeeded())
+	//	GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
 
 
 }
@@ -91,9 +89,6 @@ AProjectOneCharacter::AProjectOneCharacter()
 
 
 
-	SoundComponent = CreateDefaultSubobject<UPlayerAkComponent>(TEXT("SoundComponent"));
-	SoundComponent->SetPlayer(this);
-
 
 	FollowCamera->SetRelativeLocation(FVector(-50.0f, 0, 0));
 
@@ -103,7 +98,8 @@ AProjectOneCharacter::AProjectOneCharacter()
 	InputVector = FVector::ZeroVector;
 	Hp = 100.0f;
 
-
+	IsAlive = true;
+	DeadTime = 3;
 }
 
 void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -228,7 +224,6 @@ void AProjectOneCharacter::Shooting(float tick)
 			FTimerHandle time_;//bulletCheck
 			if (Weapone->CurBulletCount <= 0)
 				return;
-			SoundComponent->PlayShotSound();
 			
 			//Spread Bullet
 			float RandPitch = FMath::RandRange(-(Weapone->Spread*0.5f), Weapone->Spread*0.5f);
@@ -269,7 +264,9 @@ void AProjectOneCharacter::Hit(float Damage, AActor * Causer)
 		Hp = 0;
 		auto CauserPlayer = Cast<AProjectOneCharacter>(Causer);
 		CauserPlayer->Evolution();
-		Dead();
+
+		IsAlive = false;
+		GetWorld()->GetTimerManager().SetTimer(DeadTimer, this, &AProjectOneCharacter::Dead, 1.0f, true);
 
 		auto AI = Cast<AAICharacter>(Causer);
 		if (AI)
@@ -369,7 +366,13 @@ FVector AProjectOneCharacter::GetCharacterToAimeVec()
 
 void AProjectOneCharacter::Dead()
 {
-	Destroy(this);
+	DeadTime--;
+
+	if (DeadTime < 1)
+	{
+		GetWorldTimerManager().ClearTimer(DeadTimer);
+		Destroy(this);
+	}
 	ABLOG_S(Warning);
 }
 
