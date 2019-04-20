@@ -16,7 +16,7 @@ AWeapon::AWeapon()
 	MaxBulletCount = 100;
 	CurBulletCount = 100;
 	Spread = 1.0f;
-	IntervalTime = 0.06f;
+	IntervalTime = 0.2f;
 	Range = 100.0f;
 	VerticalRecoil = 0.15f;
 	HorizonRecoil = 0.1f;

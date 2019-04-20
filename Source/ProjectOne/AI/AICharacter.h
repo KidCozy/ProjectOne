@@ -105,6 +105,7 @@ public:
 	void MoveToLocation(FVector Location);
 
 	void Hide(AActor * Attacker);
+	bool Hiding;
 
 
 

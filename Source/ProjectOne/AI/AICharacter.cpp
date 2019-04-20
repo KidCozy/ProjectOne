@@ -618,7 +618,7 @@ void AAICharacter::CheckSafe()
 	if (!IsMoving)
 		return;
 
-	if (FVector::Distance(TargetCoverPos, GetActorLocation()) < 170.0f) {
+	if (FVector::Distance(TargetCoverPos, GetActorLocation()) < 150.0f) {
 		TargetCoverPos = FVector::ZeroVector;
 		LookAt(TargetLocationPos);
 		IsMoving = false;
@@ -650,9 +650,17 @@ void AAICharacter::MoveToLocation(FVector Location)
 			{
 				if(DirectionVec == MoveVec::ForwardVec && LeftCheck && RigthCheck)
 				LookAt(TargetLocationPos);
-					Forward();
+				Forward();
 				//AICon->MoveToLocation(TargetLocationPos);
 			}
+	}
+	else if (Hiding)
+	{
+		Hiding = false;
+		MoveEnd = true;
+		//LookAroundStart();
+
+		CurState = AIState::Guard;
 	}
 	else
 	{
@@ -695,9 +703,12 @@ void AAICharacter::Hide(AActor * Attacker)
 	}
 
 	ABLOG(Warning, TEXT("TargetCoverPos :  %f , %f, %f"), TargetCoverPos.X, TargetCoverPos.Y, TargetCoverPos.Z);
-	if (TargetCoverPos != FVector::ZeroVector)
+	if (TargetCoverPos != FVector::ZeroVector) {
 		//IsMoving = true;
 		TargetLocationPos = TargetCoverPos;
+		Hiding = true;
+		TargetPlayer = Character;
+	}
 		//AICon->MoveToLocation(TargetCoverPos);
 }
 
@@ -1190,6 +1201,7 @@ void AAICharacter::Evolution()
 	Weapone->SetActorRelativeLocation(FVector(65.0f, -10.0f, 25.0f));
 	APAnim->Evolution();
 
+	Weapone->IntervalTime = 0.06f;
 	Hp = 100.0f;
 }
 
