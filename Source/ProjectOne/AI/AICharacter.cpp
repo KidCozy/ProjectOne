@@ -674,7 +674,7 @@ void AAICharacter::Hide(AActor * Attacker)
 	TargetCoverPos = FVector::ZeroVector;
 
 
-	ABLOG(Warning, TEXT("TargetCover :  %s"), *TargetCover->GetName());
+	ABLOG(Warning, TEXT("Hide TargetCover :  %s"), *TargetCover->GetName());
 
 	for (int i = 0; i < TargetCover->SafePos.Num(); i++) 
 	{
@@ -703,7 +703,7 @@ void AAICharacter::Hide(AActor * Attacker)
 
 void AAICharacter::SetRandomLocation()
 {
-	LookAt(FVector(0.0f, 0.0f, 98.0f));
+	LookAt(FVector(0.0f, 0.0f, 251.0f));
 	TargetLocationPos = FVector::ZeroVector;
 	Detected();
 
@@ -734,10 +734,10 @@ void AAICharacter::SetRandomLocation()
 			}
 		}
 	}
-	TargetLocationPos = FVector(MaxLocation.X, MaxLocation.Y, 39.0);
+	TargetLocationPos = FVector(MaxLocation.X, MaxLocation.Y, 251.0f);
 }
 
-void AAICharacter::Attackted(AActor * Attacker)
+void AAICharacter::Attacked(AActor * Attacker)
 {
 	switch (CurState)
 	{
@@ -869,7 +869,7 @@ void AAICharacter::Detected()
 
 
 
-		Attackted(Bullet->GetOwner());
+		Attacked(Bullet->GetOwner());
 		//Hide(Bullet->GetOwner());
 	}
 

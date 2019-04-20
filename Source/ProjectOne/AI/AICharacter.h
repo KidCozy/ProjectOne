@@ -112,7 +112,7 @@ public:
 
 	void SetRandomLocation(); //아무것도 판단할 근거가 없을때 이동 경로 지정
 
-	void Attackted(AActor * Attacker);  //공격받았을때 판단함수
+	void Attacked(AActor * Attacker);  //공격받았을때 판단함수
 	void FindPlayer(); //캐릭터를 발견했을때 판단
 
 

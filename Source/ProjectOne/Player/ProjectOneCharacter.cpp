@@ -266,6 +266,9 @@ void AProjectOneCharacter::Hit(float Damage, AActor * Causer)
 		CauserPlayer->Evolution();
 
 		IsAlive = false;
+
+		GetMesh()->SetCollisionProfileName(TEXT("BlockAll"));
+		GetMesh()->SetSimulatePhysics(true);
 		GetWorld()->GetTimerManager().SetTimer(DeadTimer, this, &AProjectOneCharacter::Dead, 1.0f, true);
 
 		auto AI = Cast<AAICharacter>(Causer);

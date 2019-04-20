@@ -6,17 +6,17 @@ void AWall::BeginPlay()
 {
 
 
-	SafePos.Add(FVector(GetActorLocation().X -130.0f, GetActorLocation().Y + 150.0f, 34.0f));
-	SafePos.Add(FVector(GetActorLocation().X - 130.0f, GetActorLocation().Y, 34.0f));
-	SafePos.Add(FVector(GetActorLocation().X - 130.0f, GetActorLocation().Y - 150.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X -130.0f, GetActorLocation().Y + 150.0f, 251.0f));
+	SafePos.Add(FVector(GetActorLocation().X - 130.0f, GetActorLocation().Y, 251.0f));
+	SafePos.Add(FVector(GetActorLocation().X - 130.0f, GetActorLocation().Y - 150.0f, 251.0f));
 
-	SafePos.Add(FVector(GetActorLocation().X + 130.0f, GetActorLocation().Y + 150.0f, 34.0f));
-	SafePos.Add(FVector(GetActorLocation().X + 130.0f, GetActorLocation().Y, 34.0f));
-	SafePos.Add(FVector(GetActorLocation().X + 130.0f, GetActorLocation().Y - 150.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X + 130.0f, GetActorLocation().Y + 150.0f, 251.0f));
+	SafePos.Add(FVector(GetActorLocation().X + 130.0f, GetActorLocation().Y, 251.0f));
+	SafePos.Add(FVector(GetActorLocation().X + 130.0f, GetActorLocation().Y - 150.0f, 251.0f));
 
 
-	SafePos.Add(FVector(GetActorLocation().X, GetActorLocation().Y + 270.0f, 34.0f));
-	SafePos.Add(FVector(GetActorLocation().X, GetActorLocation().Y - 270.0f, 34.0f));
+	SafePos.Add(FVector(GetActorLocation().X, GetActorLocation().Y + 270.0f, 251.0f));
+	SafePos.Add(FVector(GetActorLocation().X, GetActorLocation().Y - 270.0f, 251.0f));
 
 
 	
