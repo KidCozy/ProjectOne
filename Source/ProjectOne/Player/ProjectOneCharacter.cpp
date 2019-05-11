@@ -139,8 +139,8 @@ AProjectOneCharacter::AProjectOneCharacter()
 	CameraBoom->SocketOffset = FVector(170.0f, 50.0f, 90.0f);
 
 	InputVector = FVector::ZeroVector;
-	Hp = 100.0f;
-
+	Hp = 200.0f;
+	MaxHp = Hp;
 	IsAlive = true;
 	DeadTime = 3;
 }
@@ -629,6 +629,32 @@ void AProjectOneCharacter::Dead()
 void AProjectOneCharacter::Evolution()
 {
 	SetActorScale3D(FVector(1.1f, 1.1f, 1.1f));
+}
+
+int32 AProjectOneCharacter::GetHP()
+{
+	return Hp;
+}
+
+int32 AProjectOneCharacter::GetMaxHP()
+{
+	return MaxHp;
+
+}
+
+int32 AProjectOneCharacter::GetMaxBullet()
+{
+	return Weapone->MaxBulletCount;
+}
+
+int32 AProjectOneCharacter::GetCurBullet()
+{
+	return Weapone->CurBulletCount;
+}
+
+int32 AProjectOneCharacter::GetEvolutionLevel()
+{
+	return CurLevel;
 }
 
 bool AProjectOneCharacter::CanRoll()

@@ -69,6 +69,9 @@ public:
 	UPROPERTY()
 	float Hp;
 
+	UPROPERTY()
+	float MaxHp;
+
 	void Hit(float Damage, AActor * Causer);
 
 	bool IsAlive;
@@ -80,6 +83,21 @@ public:
 	int DeadTime;
 
 	virtual void Evolution();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetHP();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetMaxHP();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetMaxBullet();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetCurBullet();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetEvolutionLevel();
 
 protected: // protected 함수 영역
 	
@@ -172,10 +190,9 @@ protected:
 	float RayNearDistance;
 	//레이로 데미지가 이미 처리 되었나?
 	bool bIsOperateDamage;
-
+	int32 CurLevel;
 	FVector InputVector;
 	FVector ScratchNormal;
-	UINT CurLevel = 0;
 	float curAmount = 0.0f;
 	float SecCurAmount = 0.5f;
 	FTimerHandle EvolutionTimer;
