@@ -28,8 +28,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool isInAir;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool isShooting;
+
 	UPROPERTY(EditAnywhere, BlueprintReadonly)
-	UAnimMontage* RollMontage;
+	UAnimMontage* ShotMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly)
+	UAnimMontage* SecondShotMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly)
+	UAnimMontage* F_RollMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly)
+	UAnimMontage* B_RollMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly)
+	UAnimMontage* R_RollMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly)
+	UAnimMontage* L_RollMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly)
 	UAnimMontage* SecondRollMontage;
@@ -45,5 +63,5 @@ private:
 	void AnimNotify_JumpEnd();
 
 protected:
-	virtual void SetRollMontage();
+	virtual void SetMontage();
 };

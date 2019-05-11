@@ -16,6 +16,7 @@ class PROJECTONE_API UWolfCharacterAnimInstance : public UPlayerCharacterAnimIns
 public:
 	UWolfCharacterAnimInstance();
 	void Evolution() override;
+
 protected:
-	void SetRollMontage() override;
+	void SetMontage() override;
 };

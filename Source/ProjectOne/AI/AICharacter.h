@@ -37,7 +37,7 @@ public:
 
 	void SetResources() override;
 	void Evolution() override;
-
+	void SetAmount() override;
 
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float delta) override;
@@ -46,7 +46,7 @@ public:
 
 
 	class AProjectOneAIController * AICon;
-
+	
 	void Forward();
 	void Back();
 	void Left();
@@ -57,6 +57,8 @@ public:
 
 	void Detected();
 	void CheckObstacle();
+
+	float Distance(FVector Vec1, FVector Vec2);
 
 	AProjectOneCharacter * TargetPlayer;
 	ACover * TargetCover;

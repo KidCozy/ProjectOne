@@ -55,7 +55,8 @@ void AWeapon::Shot(FVector SpawnPos, FRotator Direction, FVector Nolmal)
 
 		auto Bullet = GetWorld()->SpawnActor<ABullet>(SpawnPos, Direction);
 		if (Bullet != NULL) {
-			//Bullet->SetDirection(Direction);
+			Bullet->SetDirection(Direction.Vector().GetSafeNormal());
+			Bullet->SetStartPos(SpawnPos);
 			Bullet->Speed = Speed;
 			Bullet->SetOwner(GetOwner());
 			Bullet->Normal = Nolmal;

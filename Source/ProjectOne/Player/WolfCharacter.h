@@ -18,4 +18,5 @@ public:
 	void SetResources() override;
 protected:
 	void Evolution() override;
+	void SetAmount() override;
 };

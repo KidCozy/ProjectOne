@@ -5,7 +5,10 @@
 #include "ProjectOne.h"
 #include "Animation/PlayerCharacterAnimInstance.h"
 #include "GameFramework/Character.h"
+#include "Environments/ShaderInfo.h"
+#include"Kismet/KismetMathLibrary.h"
 #include "ProjectOneCharacter.generated.h"
+
 
 UCLASS(config=Game)
 class AProjectOneCharacter : public ACharacter
@@ -13,15 +16,40 @@ class AProjectOneCharacter : public ACharacter
 	GENERATED_BODY()
 
 	/** Camera boom positioning the camera behind the character */
-
+protected:
+	enum class RollDir {
+		FRONT,
+		BACK,
+		LEFT,
+		RIGHT
+	};
 public:
-	AProjectOneCharacter();
+	AProjectOneCharacter(); 
+
+	UPROPERTY()
+	TArray<UMaterialInstance*> ShaderInstance;
+
+	UPROPERTY()
+	TArray<UMaterialInstanceDynamic*> DynamicShader;
+
+	UPROPERTY()
+	TArray<UMaterialInterface*> Mat;
+	//빌드끝나고 손볼것
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMeshComponent* SecondMeshComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMesh* ThirdMesh;
+
 	//진화
 	UPROPERTY(VisibleAnywhere)
 	class USkeletalMesh* SecondSkMesh;
 
 	UPROPERTY(VisibleAnywhere)
 	class UClass* SecondAnimIns;
+
+	UPROPERTY(VisibleAnywhere)
+	class UClass* ThirdAnimIns;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -45,9 +73,13 @@ public:
 
 	bool IsAlive;
 
+	UINT EvolutionLevel = 0;
+
 	FTimerHandle DeadTimer;
 
 	int DeadTime;
+
+	virtual void Evolution();
 
 protected: // protected 함수 영역
 	
@@ -56,11 +88,16 @@ protected: // protected 함수 영역
 	virtual void SetComponents();
 	virtual void SetInitWeapone();
 
+	virtual void SetTextureParameter(USkeletalMeshComponent* Comp, UINT Index, UTexture* Tex);
+	virtual void SetScalarParameter(USkeletalMeshComponent* Comp,UINT MaterialIndex, UINT ParameterIndex, float Value);
+	virtual void SetVectorParameter(USkeletalMeshComponent* Comp, UINT Index, FLinearColor Value);
+
+	virtual bool GetDissolveAmount(UMaterialInstance* Inst, float& OutValue) const { return Inst->GetScalarParameterValue(FMaterialParameterInfo("Amount"), OutValue); }
 
 	// 아무 쓸모없는 VR코드
 	void OnResetVR();
-	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
-	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
+	//void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
+	//void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
 	// 조작 함수
 	void MoveForward(float Value);
@@ -71,11 +108,13 @@ protected: // protected 함수 영역
 	// 액션 함수
 	void Shot();
 	void Roll();
+	void Aim();
 
-	virtual void ForwardDash();
-	virtual void BackDash();
-	virtual void LeftDash();
-	virtual void RightDash();
+	//virtual void ForwardDash();
+	//virtual void BackDash();
+	//virtual void LeftDash();
+	//virtual void RightDash();
+
 	void MoveReleased();
 	void JumpInput();
 
@@ -85,7 +124,7 @@ protected: // protected 함수 영역
 	virtual void Shooting(float tick);
 
 	void ReLoad();
-	virtual void Evolution();
+
 	void Dead();
 	FVector GetCharacterToAimeVec();
 protected: // protected 자원 영역
@@ -109,12 +148,14 @@ protected: // protected 자원 영역
 	bool isShooting;
 
 
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float delta) override;
 	virtual void BeginPlay() override;
+	virtual void SetAmount();
 	// End of APawn interface
 
 public:
@@ -127,7 +168,18 @@ private:
 
 protected:
 	float intervalTime = 0.0f;
+	//총 쐈을때 이 거리보다 가까우면 총알을 쏘지않고 데미지를 주는 변수
+	float RayNearDistance;
+	//레이로 데미지가 이미 처리 되었나?
+	bool bIsOperateDamage;
+
 	FVector InputVector;
 	FVector ScratchNormal;
+	UINT CurLevel = 0;
+	float curAmount = 0.0f;
+	float SecCurAmount = 0.5f;
+	FTimerHandle EvolutionTimer;
+	RollDir rollDir;
+	bool isAim;
 };
 

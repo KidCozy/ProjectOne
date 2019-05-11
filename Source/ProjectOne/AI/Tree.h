@@ -20,4 +20,6 @@ public:
 	virtual void BeginPlay() override;
 
 
+	UPROPERTY(VisibleAnywhere, Category = Mesh)
+	UStaticMeshComponent * Pivot;
 };

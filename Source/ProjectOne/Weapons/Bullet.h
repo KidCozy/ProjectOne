@@ -28,11 +28,14 @@ public:
 
 	virtual void PostInitializeComponents() override;
 
-	float LifeTime;
+	virtual void BeginPlay()override;
 
-	UFUNCTION()
+	void SetStartPos(FVector Position);
+
+	//void RayCheckFunc();
+	/*UFUNCTION()
 	void OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OherCcomp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
+*/
 	void SetDirection(FVector direction);
 
 protected:
@@ -55,6 +58,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Scratch)
 	UMaterialInstance * DecalMaterialinstance;
 
+
+	UPROPERTY(EditAnywhere, Category = Scratch)
+	UParticleSystemComponent* Trail;
+
 	//UPROPERTY(VisibleAnywhere, Category = Matareal)
 	//UDecalComponent * DecalMaterialinstance;
+
+	//FTimerHandle RayCheckTimer;
+	FVector PreLocation;
+
+	float LifeTime;
+
+	bool isStartRay;
 };

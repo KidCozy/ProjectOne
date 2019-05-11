@@ -20,6 +20,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Mesh)
 	UStaticMeshComponent * Mesh;
 
+
+
 	virtual void BeginPlay() override;
 
 public:	
