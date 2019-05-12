@@ -12,22 +12,27 @@ void AWolfCharacter::SetResources() {
 	if (CSHAKE_FIRE.Succeeded())
 		CShakeList.Add(CSHAKE_FIRE.Class);
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_MANEQUIN(TEXT("SkeletalMesh'/Game/Animations/Exper/Mesh/SK_Wolf1_Idle_dog0F.SK_Wolf1_Idle_dog0F'"));
-	if (SK_MANEQUIN.Succeeded())
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_MANEQUIN(TEXT("SkeletalMesh'/Game/Animations/Wolf1/SK_Wolf1_Idle.SK_Wolf1_Idle'"));
+	if (SK_MANEQUIN.Succeeded()) {
 		GetMesh()->SetSkeletalMesh(SK_MANEQUIN.Object);
+		FirstMesh = SK_MANEQUIN.Object;
+		SecondMeshComponent->SetSkeletalMesh(FirstMesh);
+	}
 
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -42.0f), FRotator(0.0f, -90.0f, 0.0f));
 	
-	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/Exper/Wolf1_AnimBP.Wolf1_AnimBP_C'"));
-	if (TEMP_ANIM.Succeeded())
+	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/Wolf1/BP_Wolf1.BP_Wolf1_C'"));
+	if (TEMP_ANIM.Succeeded()) {
 		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
+		SecondMeshComponent->SetAnimInstanceClass(TEMP_ANIM.Class);
+	}
 
 	
 
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_Sec(TEXT("SkeletalMesh'/Game/Animations/Wolf2Build/SK_Wolf2_Idle.SK_Wolf2_Idle'"));
 	if (SK_Sec.Succeeded()) {
 		SecondSkMesh = SK_Sec.Object;
-		SecondMeshComponent->SetSkeletalMesh(SecondSkMesh);
+		//SecondMeshComponent->SetSkeletalMesh(SecondSkMesh);
 		SecondMeshComponent->SetVisibility(false);
 	}
 
@@ -46,91 +51,188 @@ void AWolfCharacter::SetResources() {
 		ThirdAnimIns = ANIM_THIRD.Class;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> EVOLUTION_START_MATERIAL(TEXT("MaterialInstanceConstant'/Game/Animations/Exper/Mesh/Barrier_Invert_Micro_Inst.Barrier_Invert_Micro_Inst'"));
-	if (EVOLUTION_START_MATERIAL.Succeeded())
-	{
+	//유년기 Material 설정
 
-		GetMesh()->SetMaterial(0, EVOLUTION_START_MATERIAL.Object);
+	Mat.Add(GetMesh()->GetMaterial(0));
+	Mat.Add(GetMesh()->GetMaterial(1));
+	Mat.Add(GetMesh()->GetMaterial(2));
 
-		Mat.Add(GetMesh()->GetMaterial(0));
+	DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(0, Mat[0]));
+	DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(0, Mat[0]));
 
-		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(0, Mat[0]));
+	DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(1, Mat[1]));
+	DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(1, Mat[1]));
 
-		GetMesh()->SetMaterial(0, DynamicShader[0]);
+	DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(2, Mat[2]));
+	DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(2, Mat[2]));
 
-		DynamicShader[0]->SetScalarParameterValue("Amount", 0.0f);
-		DynamicShader[0]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[0]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[0]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[0]->SetScalarParameterValue("TransitionTime", 3.0f);
+	GetMesh()->SetMaterial(0, DynamicShader[0]);
+	SecondMeshComponent->SetMaterial(0, DynamicShader[1]);
 
-		DynamicShader[0]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-	}
+	GetMesh()->SetMaterial(1, DynamicShader[2]);
+	SecondMeshComponent->SetMaterial(1, DynamicShader[3]);
+
+	GetMesh()->SetMaterial(2, DynamicShader[4]);
+	SecondMeshComponent->SetMaterial(3, DynamicShader[5]);
+
+
+
+	DynamicShader[0]->SetScalarParameterValue("Amount", 0.0f);
+	DynamicShader[0]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+	DynamicShader[0]->SetScalarParameterValue("Fringe", 40.0f);
+	DynamicShader[0]->SetScalarParameterValue("Offset", 3.5f);
+	DynamicShader[0]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+	DynamicShader[0]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+	DynamicShader[1]->SetScalarParameterValue("Amount", 0.5f);
+	DynamicShader[1]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+	DynamicShader[1]->SetScalarParameterValue("Fringe", 40.0f);
+	DynamicShader[1]->SetScalarParameterValue("Offset", 3.5f);
+	DynamicShader[1]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+	DynamicShader[1]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+
+	DynamicShader[2]->SetScalarParameterValue("Amount", 0.0f);
+	DynamicShader[2]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+	DynamicShader[2]->SetScalarParameterValue("Fringe", 40.0f);
+	DynamicShader[2]->SetScalarParameterValue("Offset", 3.5f);
+	DynamicShader[2]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+	DynamicShader[2]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+	DynamicShader[3]->SetScalarParameterValue("Amount", 0.5f);
+	DynamicShader[3]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+	DynamicShader[3]->SetScalarParameterValue("Fringe", 40.0f);
+	DynamicShader[3]->SetScalarParameterValue("Offset", 3.5f);
+	DynamicShader[3]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+	DynamicShader[3]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+	DynamicShader[4]->SetScalarParameterValue("Amount", 0.0f);
+	DynamicShader[4]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+	DynamicShader[4]->SetScalarParameterValue("Fringe", 40.0f);
+	DynamicShader[4]->SetScalarParameterValue("Offset", 3.5f);
+	DynamicShader[4]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+	DynamicShader[4]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+	DynamicShader[5]->SetScalarParameterValue("Amount", 0.5f);
+	DynamicShader[5]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+	DynamicShader[5]->SetScalarParameterValue("Fringe", 40.0f);
+	DynamicShader[5]->SetScalarParameterValue("Offset", 3.5f);
+	DynamicShader[5]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+	DynamicShader[5]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+
+
+
 	static ConstructorHelpers::FObjectFinder<UMaterialInstance> EVOLUTION_END_MATERIAL(TEXT("MaterialInstanceConstant'/Game/Animations/Wolf2Build/Material/Barrier_Invert_Micro_2_Inst.Barrier_Invert_Micro_2_Inst'"));
 	if (EVOLUTION_END_MATERIAL.Succeeded()) {
 
-		SecondMeshComponent->SetMaterial(0, EVOLUTION_END_MATERIAL.Object);
+		ABLOG(Warning, TEXT("TEST"));
 
-		Mat.Add(SecondMeshComponent->GetMaterial(0));
+		GetMesh()->SetMaterial(3, EVOLUTION_END_MATERIAL.Object);
+		SecondMeshComponent->SetMaterial(3, EVOLUTION_END_MATERIAL.Object);
 
-		DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(0, Mat[1]));
+		Mat.Add(GetMesh()->GetMaterial(3));
 
-		SecondMeshComponent->SetMaterial(0, DynamicShader[1]);
+		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(3, Mat[3]));
+		DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(3, Mat[3]));
+
+		GetMesh()->SetMaterial(3, DynamicShader[6]);
+		SecondMeshComponent->SetMaterial(3, DynamicShader[7]);
 
 
-		DynamicShader[1]->SetScalarParameterValue("Amount", 0.5f);
-		DynamicShader[1]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[1]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[1]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[1]->SetScalarParameterValue("TransitionTime", 3.0f);
+		DynamicShader[6]->SetScalarParameterValue("Amount", 0.5f);
+		DynamicShader[6]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+		DynamicShader[6]->SetScalarParameterValue("Fringe", 40.0f);
+		DynamicShader[6]->SetScalarParameterValue("Offset", 3.5f);
+		DynamicShader[6]->SetScalarParameterValue("TransitionTime", 3.0f);
 
-		DynamicShader[1]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+		DynamicShader[6]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+		DynamicShader[7]->SetScalarParameterValue("Amount", 0.5f);
+		DynamicShader[7]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+		DynamicShader[7]->SetScalarParameterValue("Fringe", 40.0f);
+		DynamicShader[7]->SetScalarParameterValue("Offset", 3.5f);
+		DynamicShader[7]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+		DynamicShader[7]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
 	}
 
 	static ConstructorHelpers::FObjectFinder<UMaterialInstance> EVOLUTION_THIRDDOWN_MATERIAL(TEXT("MaterialInstanceConstant'/Game/Animations/Wolf3Build/Material/M_Wolf3EvolutionMat_Down_Inst.M_Wolf3EvolutionMat_Down_Inst'"));
 	if (EVOLUTION_THIRDDOWN_MATERIAL.Succeeded())
 	{
 
-		GetMesh()->SetMaterial(1, EVOLUTION_THIRDDOWN_MATERIAL.Object);
+		GetMesh()->SetMaterial(4, EVOLUTION_THIRDDOWN_MATERIAL.Object);
+		SecondMeshComponent->SetMaterial(4, EVOLUTION_THIRDDOWN_MATERIAL.Object);
 
-		Mat.Add(GetMesh()->GetMaterial(1));
+		Mat.Add(GetMesh()->GetMaterial(4));
 
-		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(1, Mat[2]));
+		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(4, Mat[4]));
+		DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(4, Mat[4]));
 
-		GetMesh()->SetMaterial(1, DynamicShader[2]);
+		GetMesh()->SetMaterial(4, DynamicShader[8]);
+		SecondMeshComponent->SetMaterial(4, DynamicShader[9]);
 
-		DynamicShader[2]->SetScalarParameterValue("Amount", 0.6f);
-		DynamicShader[2]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[2]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[2]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[2]->SetScalarParameterValue("TransitionTime", 3.0f);
+		DynamicShader[8]->SetScalarParameterValue("Amount", 0.6f);
+		DynamicShader[8]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+		DynamicShader[8]->SetScalarParameterValue("Fringe", 40.0f);
+		DynamicShader[8]->SetScalarParameterValue("Offset", 3.5f);
+		DynamicShader[8]->SetScalarParameterValue("TransitionTime", 3.0f);
 
-		DynamicShader[2]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+		DynamicShader[8]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+		DynamicShader[9]->SetScalarParameterValue("Amount", 0.6f);
+		DynamicShader[9]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+		DynamicShader[9]->SetScalarParameterValue("Fringe", 40.0f);
+		DynamicShader[9]->SetScalarParameterValue("Offset", 3.5f);
+		DynamicShader[9]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+		DynamicShader[9]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
 	}
 
 	static ConstructorHelpers::FObjectFinder<UMaterialInstance> EVOLUTION_THIRDUP_MATERIAL(TEXT("MaterialInstanceConstant'/Game/Animations/Wolf3Build/Material/M_Wolf3EvolutionMat_Up_Inst.M_Wolf3EvolutionMat_Up_Inst'"));
 	if (EVOLUTION_THIRDUP_MATERIAL.Succeeded()) {
 
-		GetMesh()->SetMaterial(2, EVOLUTION_THIRDUP_MATERIAL.Object);
+		GetMesh()->SetMaterial(5, EVOLUTION_THIRDUP_MATERIAL.Object);
+		SecondMeshComponent->SetMaterial(5, EVOLUTION_THIRDUP_MATERIAL.Object);
 
-		Mat.Add(GetMesh()->GetMaterial(2));
+		Mat.Add(GetMesh()->GetMaterial(5));
 
-		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(2, Mat[3]));
 
-		GetMesh()->SetMaterial(2, DynamicShader[3]);
+		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(5, Mat[5]));
+		DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(5, Mat[5]));
 
-		DynamicShader[3]->SetScalarParameterValue("Amount", 0.6f);
-		DynamicShader[3]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[3]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[3]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[3]->SetScalarParameterValue("TransitionTime", 3.0f);
+		GetMesh()->SetMaterial(5, DynamicShader[10]);
+		SecondMeshComponent->SetMaterial(5, DynamicShader[11]);
 
-		DynamicShader[3]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+		DynamicShader[10]->SetScalarParameterValue("Amount", 0.6f);
+		DynamicShader[10]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+		DynamicShader[10]->SetScalarParameterValue("Fringe", 40.0f);
+		DynamicShader[10]->SetScalarParameterValue("Offset", 3.5f);
+		DynamicShader[10]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+		DynamicShader[10]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+
+		DynamicShader[11]->SetScalarParameterValue("Amount", 0.6f);
+		DynamicShader[11]->SetScalarParameterValue("EmissiveAmount", 150.0f);
+		DynamicShader[11]->SetScalarParameterValue("Fringe", 40.0f);
+		DynamicShader[11]->SetScalarParameterValue("Offset", 3.5f);
+		DynamicShader[11]->SetScalarParameterValue("TransitionTime", 3.0f);
+
+		DynamicShader[11]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
 	}
 
 
 	
-	SetActorScale3D(FVector(0.7f,0.7f,0.7f));
+	GetMesh()->SetRelativeScale3D(FVector(0.7f, 0.7f, 0.7f));
+	SecondMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -42.0f));
+	SecondMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 }
 
 void AWolfCharacter::Evolution() {
@@ -139,7 +241,7 @@ void AWolfCharacter::Evolution() {
 		case 0:
 			SecondMeshComponent->SetVisibility(true);
 			/* 여기에 변화하는 코드 추가 */
-			SecondMeshComponent->SetAnimInstanceClass(SecondAnimIns);
+		/*	SecondMeshComponent->SetAnimInstanceClass(SecondAnimIns);
 
 			APAnim = Cast<UPlayerCharacterAnimInstance>(SecondMeshComponent->GetAnimInstance());
 			GetCapsuleComponent()->SetCapsuleSize(35.0f, 70.0f);
@@ -148,7 +250,7 @@ void AWolfCharacter::Evolution() {
 			SecondMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 
 			CameraBoom->SocketOffset = FVector(100.0f, 50.0f, 90.0f);
-			SetActorScale3D(FVector(1.0f, 1.0f, 1.0f));
+			SetActorScale3D(FVector(1.0f, 1.0f, 1.0f));*/
 			
 			/*종료되면 첫번째 스켈레탈 메쉬는 가리고 세 번째 메쉬를 로드시킴*/
 			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
@@ -156,12 +258,57 @@ void AWolfCharacter::Evolution() {
 		case 1:
 			GetMesh()->SetVisibility(true);
 
-			SecondMeshComponent->SetAnimInstanceClass(SecondAnimIns);
+			/*SecondMeshComponent->SetAnimInstanceClass(SecondAnimIns);
 			APAnim = Cast<UPlayerCharacterAnimInstance>(SecondMeshComponent->GetAnimInstance());
 
 			SecondMeshComponent->SetVisibility(true);
 
+			GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));*/
+			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
+			break;
+		case 2:
+
+			SecondMeshComponent->SetSkeletalMesh(SecondSkMesh);
+
+			
+			SecondMeshComponent->SetAnimInstanceClass(SecondAnimIns);
+
+			APAnim = Cast<UPlayerCharacterAnimInstance>(SecondMeshComponent->GetAnimInstance());
+
+			GetCapsuleComponent()->SetCapsuleSize(35.0f, 70.0f);
+
 			GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
+			GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+
+			SecondMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
+			SecondMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+
+			CameraBoom->SocketOffset = FVector(100.0f, 50.0f, 90.0f);
+
+			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
+			break;
+
+		case 3:
+
+			GetMesh()->SetAnimInstanceClass(SecondAnimIns);
+			GetMesh()->SetSkeletalMesh(SecondSkMesh);
+
+			GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
+			GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+
+			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
+			break;
+
+		case 4:
+			SecondMeshComponent->SetRelativeScale3D(FVector(1.3f, 1.3f, 1.3f));
+			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
+
+			break;
+
+		case 5:
+			GetMesh()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
+			GetMesh()->SetSkeletalMesh(ThirdMesh);
+
 			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
 			break;
 		}
@@ -184,24 +331,23 @@ void AWolfCharacter::SetAmount()
 					SecCurAmount = 0.0f;
 	
 				SetScalarParameter(GetMesh(), 0, 0, curAmount);
+				SetScalarParameter(GetMesh(), 1, 0, curAmount);
+				SetScalarParameter(GetMesh(), 2, 0, curAmount);
 				SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
+				SetScalarParameter(SecondMeshComponent, 1, 0, SecCurAmount);
+				SetScalarParameter(SecondMeshComponent, 2, 0, SecCurAmount);
 			}
 			else {
-				APAnim->Evolution();
 	
 				++CurLevel;
 	
 				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
-				GetMesh()->SetSkeletalMesh(ThirdMesh);
-				GetMesh()->SetAnimInstanceClass(ThirdAnimIns);
 
-				GetMesh()->SetMaterial(0, GetMesh()->GetMaterial(1));
-				GetMesh()->SetMaterial(1, GetMesh()->GetMaterial(2));
+				GetMesh()->SetRelativeScale3D(FVector(1.2f, 1.2f, 1.2f));
 
-				Weapone->IntervalTime = 0.06f;
-
-				curAmount = 0.6;
-				Hp = 100.0f;
+				curAmount = 0.5;
+				Hp = 150.0f;
+				MaxHp = 150.0f;
 			}
 			break;
 		case 1:
@@ -217,21 +363,158 @@ void AWolfCharacter::SetAmount()
 
 				SetScalarParameter(GetMesh(), 0, 0, curAmount);
 				SetScalarParameter(GetMesh(), 1, 0, curAmount);
+				SetScalarParameter(GetMesh(), 2, 0, curAmount);
 				SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
+				SetScalarParameter(SecondMeshComponent, 1, 0, SecCurAmount);
+				SetScalarParameter(SecondMeshComponent, 2, 0, SecCurAmount);
 			}
 			else {
-				APAnim->Evolution();
+				//APAnim->Evolution();
 
 				++CurLevel;
 
+				SecCurAmount = 0.5;
 
+				SetScalarParameter(SecondMeshComponent, 3, 0, SecCurAmount);
+				SetScalarParameter(SecondMeshComponent, 4, 0, 1.0f);
+				SetScalarParameter(SecondMeshComponent, 5, 0, 1.0f);
+
+				SecondMeshComponent->SetMaterial(0, SecondMeshComponent->GetMaterial(3));
+				SecondMeshComponent->SetMaterial(1, SecondMeshComponent->GetMaterial(4));
+				SecondMeshComponent->SetMaterial(2, SecondMeshComponent->GetMaterial(5));
+
+
+				Hp = 200.0f;
+				MaxHp = 200.0f;
 				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
-				GetMesh()->SetSkeletalMesh(ThirdMesh);
-				Weapone->IntervalTime = 0.06f;
-				Hp = 100.0f;
+
+				//GetMesh()->SetSkeletalMesh(ThirdMesh);
+				//Weapone->IntervalTime = 0.06f;
+
 			}
 			break;
-	
+
+		case 2:
+			if (curAmount < 1.0f || 0.0f < SecCurAmount) 
+			{
+				curAmount += 0.01f;
+				SecCurAmount -= 0.01f;
+
+				if (curAmount > 1.0f)
+					curAmount = 1.0f;
+
+				if (SecCurAmount < 0.0f)
+					SecCurAmount = 0.0f;
+
+				SetScalarParameter(GetMesh(), 0, 0, curAmount);
+				SetScalarParameter(GetMesh(), 1, 0, curAmount);
+				SetScalarParameter(GetMesh(), 2, 0, curAmount);
+				SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
+			}
+			else {
+
+				++CurLevel;
+				curAmount = 0.5f;
+
+				SetScalarParameter(GetMesh(), 3, 0, curAmount);
+				SetScalarParameter(GetMesh(), 4, 0, 1.0f);
+				SetScalarParameter(GetMesh(), 5, 0, 1.0f);
+
+				GetMesh()->SetMaterial(0, GetMesh()->GetMaterial(3));
+				GetMesh()->SetMaterial(1, GetMesh()->GetMaterial(4));
+				GetMesh()->SetMaterial(2, GetMesh()->GetMaterial(5));
+
+				Hp = 250.0f;
+				MaxHp = 250.0f;
+				Weapone->IntervalTime = 0.06f;
+				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
+			}
+			break;
+
+		case 3:
+			if (curAmount > 0.0f || SecCurAmount < 1.0f) {
+				curAmount -= 0.01f;
+				SecCurAmount += 0.01f;
+
+				if (curAmount < 0.0f)
+					curAmount = 0.0f;
+
+				if (SecCurAmount > 1.0f)
+					SecCurAmount = 1.0f;
+
+				SetScalarParameter(GetMesh(), 0, 0, curAmount);
+				SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
+
+			}
+			else
+			{
+				++CurLevel;
+				SecCurAmount = 0.5;
+
+				Hp = 300.0f;
+				MaxHp = 300.0f;
+
+				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
+			}
+			break;
+
+		case 4:
+			if (curAmount < 1.0f || 0.0f < SecCurAmount)
+			{
+				curAmount += 0.01f;
+				SecCurAmount -= 0.01f;
+
+				if (curAmount > 1.0f)
+					curAmount = 1.0f;
+
+				if (SecCurAmount < 0.0f)
+					SecCurAmount = 0.0f;
+
+				SetScalarParameter(GetMesh(), 0, 0, curAmount);
+				SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
+			}
+			else {
+				++CurLevel;
+				curAmount = 0.6;
+
+				Hp = 350.0f;
+				MaxHp = 350.0f;
+
+				SetScalarParameter(GetMesh(), 0, 0, curAmount);
+				SetScalarParameter(GetMesh(), 1, 0, curAmount);
+
+				GetMesh()->SetMaterial(0, GetMesh()->GetMaterial(1));
+				GetMesh()->SetMaterial(1, GetMesh()->GetMaterial(2));
+
+				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
+			}
+			break;
+
+		case 5:
+			if (curAmount > 0.0f || SecCurAmount < 1.0f) {
+				curAmount -= 0.01f;
+				SecCurAmount += 0.01f;
+
+				if (curAmount < 0.0f)
+					curAmount = 0.0f;
+
+				if (SecCurAmount > 1.0f)
+					SecCurAmount = 1.0f;
+
+				SetScalarParameter(GetMesh(), 0, 0, curAmount);
+				SetScalarParameter(GetMesh(), 1, 0, curAmount);
+				SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
+
+			}
+			else {
+				++CurLevel;
+
+				Hp = 400.0f;
+				MaxHp = 400.0f;
+				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
+			}
+
+			break;
 	}
 
 	
