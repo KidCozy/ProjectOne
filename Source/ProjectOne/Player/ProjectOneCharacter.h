@@ -41,6 +41,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMesh* ThirdMesh;
 
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMesh* FirstMesh;
+
 	//진화
 	UPROPERTY(VisibleAnywhere)
 	class USkeletalMesh* SecondSkMesh;
@@ -85,6 +88,9 @@ public:
 	virtual void Evolution();
 
 	UFUNCTION(BlueprintCallable)
+	void CalcMagneticFieldDamage(float Damage);
+
+	UFUNCTION(BlueprintCallable)
 	int32 GetHP();
 
 	UFUNCTION(BlueprintCallable)
@@ -98,6 +104,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int32 GetEvolutionLevel();
+
+	void ReLoad();
 
 protected: // protected 함수 영역
 	
@@ -127,7 +135,7 @@ protected: // protected 함수 영역
 	void Shot();
 	void Roll();
 	void Aim();
-
+	void ReloadAnimPlay();
 	//virtual void ForwardDash();
 	//virtual void BackDash();
 	//virtual void LeftDash();
@@ -140,8 +148,6 @@ protected: // protected 함수 영역
 	void PlayCShake(int Index);
 	
 	virtual void Shooting(float tick);
-
-	void ReLoad();
 
 	void Dead();
 	FVector GetCharacterToAimeVec();

@@ -31,6 +31,10 @@ void UWolfCharacterAnimInstance::SetMontage() {
 	if (SecATTACK_MONTAGE.Succeeded())
 		SecondShotMontage = SecATTACK_MONTAGE.Object;
 
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> Reload_Montage(TEXT("AnimMontage'/Game/Animations/Wolf1/Gun/SK_Wolf1_Reload_Montage.SK_Wolf1_Reload_Montage'"));
+	if (Reload_Montage.Succeeded())
+		ReloadMontage = Reload_Montage.Object;
+
 }
 
 UWolfCharacterAnimInstance::UWolfCharacterAnimInstance() {

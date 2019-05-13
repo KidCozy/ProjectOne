@@ -154,7 +154,7 @@ void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 	PlayerInputComponent->BindAction("testshot", IE_Pressed, this, &AProjectOneCharacter::Shot);
 	PlayerInputComponent->BindAction("testshot", IE_Released, this, &AProjectOneCharacter::Shot);
 
-	PlayerInputComponent->BindAction("ReLoad", IE_Pressed, this, &AProjectOneCharacter::ReLoad);
+	PlayerInputComponent->BindAction("ReLoad", IE_Pressed, this, &AProjectOneCharacter::ReloadAnimPlay);
 
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProjectOneCharacter::Aim);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AProjectOneCharacter::Aim);
@@ -339,6 +339,11 @@ void AProjectOneCharacter::Aim()
 		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
 	}
+}
+
+void AProjectOneCharacter::ReloadAnimPlay()
+{
+	APAnim->Montage_Play(APAnim->ReloadMontage);
 }
 
 void AProjectOneCharacter::MoveReleased()
@@ -629,6 +634,23 @@ void AProjectOneCharacter::Dead()
 void AProjectOneCharacter::Evolution()
 {
 	SetActorScale3D(FVector(1.1f, 1.1f, 1.1f));
+}
+
+void AProjectOneCharacter::CalcMagneticFieldDamage(float Damage)
+{
+	if (Hp - Damage <= 0) {
+		Hp = 0;
+		IsAlive = false;
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+		GetMesh()->SetCollisionProfileName(TEXT("BlockAll"));
+		GetMesh()->SetSimulatePhysics(true);
+		SecondMeshComponent->SetCollisionProfileName(TEXT("BlockAll"));
+		SecondMeshComponent->SetSimulatePhysics(true);
+		GetWorld()->GetTimerManager().SetTimer(DeadTimer, this, &AProjectOneCharacter::Dead, 1.0f, true);
+	}
+	else
+		Hp-= Damage;
+	
 }
 
 int32 AProjectOneCharacter::GetHP()

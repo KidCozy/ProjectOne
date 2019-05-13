@@ -35,6 +35,9 @@ public:
 	UAnimMontage* ShotMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly)
+	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly)
 	UAnimMontage* SecondShotMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly)
@@ -61,6 +64,9 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_JumpEnd();
+
+	UFUNCTION()
+	void AnimNotify_ReloadEnd();
 
 protected:
 	virtual void SetMontage();

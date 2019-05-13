@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PlayerCharacterAnimInstance.h"
+#include "Player/ProjectOneCharacter.h"
 #include "GameFramework/Character.h"
 
 void UPlayerCharacterAnimInstance::SetMontage() {
@@ -27,6 +28,18 @@ void UPlayerCharacterAnimInstance::AnimNotify_RollEnd()
 void UPlayerCharacterAnimInstance::AnimNotify_JumpEnd()
 {
 	isInAir = false;
+}
+
+void UPlayerCharacterAnimInstance::AnimNotify_ReloadEnd()
+{
+	auto Pawn = TryGetPawnOwner();
+
+	if (::IsValid(Pawn))
+	{
+		auto Character = Cast<AProjectOneCharacter>(Pawn);
+		if (Character)
+			Character->ReLoad();
+	}
 }
 
 void UPlayerCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds) {
