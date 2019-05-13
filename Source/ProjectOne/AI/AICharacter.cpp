@@ -6,6 +6,9 @@
 #include "DrawDebugHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Runtime/NavigationSystem/Public/NavigationSystem.h"
+#include "Runtime/NavigationSystem/Public/NavigationPath.h"
+#include "Runtime/AIModule/Classes/Blueprint/AIBlueprintHelperLibrary.h"
 #include "ProjectOneAIController.h"
 
 
@@ -49,7 +52,7 @@ void AAICharacter::Tick(float delta)
 
 	//if (IsLookAround)
 	//	LookAround();
-	Update();
+	//Update();
 
 	if (isShooting)
 	{
@@ -96,6 +99,13 @@ void AAICharacter::Tick(float delta)
 
 	//ABLOG(Warning, TEXT("%d"), CurState);
 
+	//ABLOG(Warning, TEXT("Target GetLandPosZ : %f"), GetLandPosZ(-612.0f, 1082.0f));
+	//ABLOG(Warning, TEXT("Player GetLandPosZ : %f"), GetLandPosZ(9200.0f, 11265.0f));
+	if (GetLandPosZ(9200.0f, 11265.0f) == 0.0f || TargetLocationPos.Z ==0.0f) {
+		SetRandomLocation();
+	}
+	Update();
+	//AICon->MoveToLocation(FVector(9200.0f, 11265.0f, 749.0f));
 }
 
 void AAICharacter::BeginPlay()
@@ -131,10 +141,11 @@ void AAICharacter::BeginPlay()
 	//Shot();
 
 
-	SetRandomLocation();
 	/*ABLOG(Warning, TEXT("TargetLocation :   %f, %f, %f"), TargetLocationPos.X, TargetLocationPos.Y, TargetLocationPos.Z);
 
 	AICon->MoveToLocation(TargetCoverPos);*/
+
+
 }
 
 void AAICharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -411,7 +422,7 @@ void AAICharacter::Update()
 
 	//ABLOG(Warning, TEXT("isShooting :   %d"), isShooting);
 
-	ABLOG(Warning, TEXT("STATE : %d"), CurState);
+	//ABLOG(Warning, TEXT("STATE : %d"), CurState);
 	
 	//ABLOG(Warning, TEXT("TargetLocation :   %f, %f, %f"), TargetLocationPos.X, TargetLocationPos.Y, TargetLocationPos.Z);
 	if (IsAlive) {
@@ -421,16 +432,17 @@ void AAICharacter::Update()
 			//if (TargetLocationPos !=FVector::ZeroVector) {
 
 
-		/*	if (!MoveEnd)
+			if (!MoveEnd)
 				MoveToLocation(TargetLocationPos);
 			else
-				LookAround();*/
+				LookAround();
 
 			//}
 
 			break;
 		case AIState::Offensive:
 
+			AICon->StopMovement();
 			if (!isShooting)
 				Shot();
 
@@ -699,7 +711,10 @@ void AAICharacter::MoveToLocation(FVector Location)
 				LookAt(TargetLocationPos);
 				Forward();*/
 
-				ABLOG_S(Warning);
+			//	ABLOG_S(Warning);
+
+				//ABLOG(Warning,TEXT("TargetLocation : %f, %f, %f"), TargetLocationPos.X, TargetLocationPos.Y, TargetLocationPos.Z)
+
 				AICon->MoveToLocation(TargetLocationPos);
 				//AICon->MoveToActor(GetWorld()->GetFirstPlayerController()->GetPawn());
 			}
@@ -796,7 +811,11 @@ void AAICharacter::SetRandomLocation()
 		}
 	}
 	//TargetLocationPos = FVector(MaxLocation.X, MaxLocation.Y, 1150.0f);
-	TargetLocationPos = FVector(-11866.0f, 26463.0f, 1026.0f);
+
+	//while (GetLandPosZ(9200.0f, 11265.0f) == 0.0f) {
+	if(GetLandPosZ(9200.0f,11265.0f)!=0.0f)
+		TargetLocationPos = FVector(9200.0f, 11265.0f, GetLandPosZ(9200.0f, 11265.0f));
+	//}
 }
 
 void AAICharacter::Attacked(AActor * Attacker)
@@ -812,6 +831,9 @@ void AAICharacter::Attacked(AActor * Attacker)
 		}
 		else
 		{
+			ABLOG(Warning, TEXT("Attacked"));
+			MoveEnd = true;
+			AICon->StopMovement();
 			LookAt(Attacker->GetActorLocation());
 		}
 		//else
@@ -844,8 +866,10 @@ void AAICharacter::FindPlayer()
 
 			if (targetPlayer)
 			{
-				if (targetPlayer->TargetPlayer == this)
+				if (targetPlayer->TargetPlayer == this) {
 					CurState = AIState::Offensive;
+					
+				}
 				else
 					CurState = AIState::Guard;
 			}
@@ -893,6 +917,63 @@ void AAICharacter::InitTargetPlayer()
 
 	GetWorld()->GetTimerManager().SetTimer(InitTime, this, &AAICharacter::InitTargetPlayer, 4.0f, false);
 
+}
+
+float AAICharacter::GetLandPosZ(float PosX, float PosY)
+{
+	FHitResult OutHit;
+
+	FVector StartPos(PosX,PosY,27000.0f);
+	FVector EndPos(PosX, PosY, 0.0f);
+
+	FCollisionQueryParams CollisionParams;
+
+	
+
+		if (GetWorld()->LineTraceSingleByChannel(OutHit, StartPos, EndPos, ECC_GameTraceChannel3, CollisionParams))
+		{
+			if (OutHit.bBlockingHit)
+			{
+
+				UNavigationSystemV1* navSys = UNavigationSystemV1::GetCurrent(GetWorld());
+
+				UNavigationPath* NavPath = navSys->FindPathToLocationSynchronously(GetWorld(), GetActorLocation() , FVector(PosX, PosY, OutHit.ImpactPoint.Z), NULL);
+
+				//NavPath->EnableDebugDrawing(NavPath,FLinearColor::Red);
+
+			//	ABLOG(Warning, TEXT("Path Num : %d"), NavPath->PathPoints.Num());
+				//if (NavPath->PathPoints.Num() > 0)
+					//ABLOG(Warning, TEXT("Path Target : %f, %f, %f"), NavPath->PathPoints[NavPath->PathPoints.Num()-1].X, NavPath->PathPoints[NavPath->PathPoints.Num() - 1].Y, NavPath->PathPoints[NavPath->PathPoints.Num() - 1].Z);
+
+				//NavPath->GetDebugString();
+
+				if (NavPath->PathPoints.Num() > 0)
+				{
+					float TargetNum = NavPath->PathPoints.Num()-1;
+					if (PosX == NavPath->PathPoints[TargetNum].X && PosY == NavPath->PathPoints[TargetNum].Y)
+						return OutHit.ImpactPoint.Z;
+					else
+						return 0.0f;
+				}
+				else
+				{
+					return 0.0f;
+				}
+				//if (!NavPath->IsPartial())
+				//	return 0.0f;
+				//else
+				//return OutHit.ImpactPoint.Z;
+			}
+			else
+				return 0.0f;
+		}
+		else
+		{
+			return 0.0f;
+		}
+
+
+	
 }
 
 

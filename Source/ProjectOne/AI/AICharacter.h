@@ -121,5 +121,6 @@ public:
 
 	void InitTargetPlayer();
 
+	float GetLandPosZ(float PosX,float PosY);
 };
 
