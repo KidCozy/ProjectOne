@@ -122,5 +122,8 @@ public:
 	void InitTargetPlayer();
 
 	float GetLandPosZ(float PosX,float PosY);
+
+	UFUNCTION(BlueprintCallable)
+	void SetWidget(UUserWidget* widget);
 };
 

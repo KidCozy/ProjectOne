@@ -231,12 +231,16 @@ void AWolfCharacter::SetResources() {
 
 	
 	GetMesh()->SetRelativeScale3D(FVector(0.7f, 0.7f, 0.7f));
-	SecondMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -42.0f));
+	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -45.0f));
+	SecondMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -45.0f));
 	SecondMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+
+	CameraBoom->SocketOffset = FVector(240.0f, 40.0f, 50.0f);
 }
 
 void AWolfCharacter::Evolution() {
 	if (IsAlive) {
+		tmpLevel++;
 		switch (CurLevel) {
 		case 0:
 			SecondMeshComponent->SetVisibility(true);
@@ -253,6 +257,10 @@ void AWolfCharacter::Evolution() {
 			SetActorScale3D(FVector(1.0f, 1.0f, 1.0f));*/
 			
 			/*종료되면 첫번째 스켈레탈 메쉬는 가리고 세 번째 메쉬를 로드시킴*/
+			APAnim = Cast<UPlayerCharacterAnimInstance>(SecondMeshComponent->GetAnimInstance());
+			CameraBoom->SocketOffset = FVector(190.0f, 40.0f, 70.0f);
+			Hp = 250.0f;
+			MaxHp = 250.0f;
 			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
 			break;
 		case 1:
@@ -264,6 +272,10 @@ void AWolfCharacter::Evolution() {
 			SecondMeshComponent->SetVisibility(true);
 
 			GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));*/
+			APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+			CameraBoom->SocketOffset = FVector(160.0f, 40.0f, 90.0f);
+			Hp = 300.0f;
+			MaxHp = 300.0f;
 			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
 			break;
 		case 2:
@@ -285,6 +297,8 @@ void AWolfCharacter::Evolution() {
 
 			CameraBoom->SocketOffset = FVector(100.0f, 50.0f, 90.0f);
 
+			Hp = 350.0f;
+			MaxHp = 350.0f;
 			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
 			break;
 
@@ -296,11 +310,15 @@ void AWolfCharacter::Evolution() {
 			GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
 			GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 
+			Hp = 400.0f;
+			MaxHp = 400.0f;
 			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
 			break;
 
 		case 4:
 			SecondMeshComponent->SetRelativeScale3D(FVector(1.3f, 1.3f, 1.3f));
+			Hp = 450.0f;
+			MaxHp = 450.0f;
 			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
 
 			break;
@@ -309,6 +327,8 @@ void AWolfCharacter::Evolution() {
 			GetMesh()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
 			GetMesh()->SetSkeletalMesh(ThirdMesh);
 
+			Hp = 500.0f;
+			MaxHp = 500.0f;
 			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AWolfCharacter::SetAmount, 0.01f, true);
 			break;
 		}
@@ -346,8 +366,7 @@ void AWolfCharacter::SetAmount()
 				GetMesh()->SetRelativeScale3D(FVector(1.2f, 1.2f, 1.2f));
 
 				curAmount = 0.5;
-				Hp = 150.0f;
-				MaxHp = 150.0f;
+
 			}
 			break;
 		case 1:
@@ -384,8 +403,8 @@ void AWolfCharacter::SetAmount()
 				SecondMeshComponent->SetMaterial(2, SecondMeshComponent->GetMaterial(5));
 
 
-				Hp = 200.0f;
-				MaxHp = 200.0f;
+				Hp = 300.0f;
+				MaxHp = 300.0f;
 				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
 
 				//GetMesh()->SetSkeletalMesh(ThirdMesh);
@@ -424,8 +443,8 @@ void AWolfCharacter::SetAmount()
 				GetMesh()->SetMaterial(1, GetMesh()->GetMaterial(4));
 				GetMesh()->SetMaterial(2, GetMesh()->GetMaterial(5));
 
-				Hp = 250.0f;
-				MaxHp = 250.0f;
+				Hp = 350.0f;
+				MaxHp = 350.0f;
 				Weapone->IntervalTime = 0.06f;
 				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
 			}
@@ -451,8 +470,8 @@ void AWolfCharacter::SetAmount()
 				++CurLevel;
 				SecCurAmount = 0.5;
 
-				Hp = 300.0f;
-				MaxHp = 300.0f;
+				Hp = 400.0f;
+				MaxHp = 400.0f;
 
 				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
 			}
@@ -477,8 +496,8 @@ void AWolfCharacter::SetAmount()
 				++CurLevel;
 				curAmount = 0.6;
 
-				Hp = 350.0f;
-				MaxHp = 350.0f;
+				Hp = 450.0f;
+				MaxHp = 450.0f;
 
 				SetScalarParameter(GetMesh(), 0, 0, curAmount);
 				SetScalarParameter(GetMesh(), 1, 0, curAmount);
@@ -509,8 +528,8 @@ void AWolfCharacter::SetAmount()
 			else {
 				++CurLevel;
 
-				Hp = 400.0f;
-				MaxHp = 400.0f;
+				Hp = 500.0f;
+				MaxHp = 500.0f;
 				GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
 			}
 

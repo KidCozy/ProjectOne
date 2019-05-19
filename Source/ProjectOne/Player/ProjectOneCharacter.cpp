@@ -7,6 +7,8 @@
 #include "PlayerStatComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Components/Widget.h"
 #include "Components/InputComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -77,7 +79,7 @@ void AProjectOneCharacter::SetResources() {
 
 		ABLOG_S(Warning);
 	}
-
+	tmpLevel = 0;
 }
 
 void AProjectOneCharacter::SetComponents()
@@ -143,6 +145,9 @@ AProjectOneCharacter::AProjectOneCharacter()
 	MaxHp = Hp;
 	IsAlive = true;
 	DeadTime = 3;
+
+	ItemSlot.Init((int32)Item::EMPTY, 2);
+
 }
 
 void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -180,6 +185,9 @@ void AProjectOneCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &AProjectOneCharacter::Roll);
 	PlayerInputComponent->BindAction("Evolution", IE_Pressed, this, &AProjectOneCharacter::Evolution);
+
+	PlayerInputComponent->BindAction("Q", IE_Pressed, this, &AProjectOneCharacter::UseQItem);
+	PlayerInputComponent->BindAction("E", IE_Pressed, this, &AProjectOneCharacter::UseEItem);
 	//PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	//PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AProjectOneCharacter::JumpInput);
 }
@@ -212,6 +220,7 @@ void AProjectOneCharacter::BeginPlay()
 
 void AProjectOneCharacter::SetAmount()
 {
+
 }
 
 
@@ -400,7 +409,7 @@ void AProjectOneCharacter::Shooting(float tick)
 			}
 			//아니면 총알발사
 			else {
-				switch (CurLevel) {
+				switch (CurLevel %2) {
 				case 0:
 
 					Weapone->Shot(GetMesh()->GetSocketLocation(TEXT("Muzzle")), SpreadRotation, ScratchNormal);
@@ -438,6 +447,76 @@ void AProjectOneCharacter::Shooting(float tick)
 void AProjectOneCharacter::ReLoad()
 {
 	Weapone->ReLoad();
+}
+
+void AProjectOneCharacter::SetItemSlot(int ItemNum)
+{
+	if (ItemSlot[0] == 0)
+	{
+		ItemSlot[0] = ItemNum;
+	}
+	else if (ItemSlot[1] == 0)
+	{
+		ItemSlot[1] = ItemNum;
+	}
+}
+
+int AProjectOneCharacter::GetQItem()
+{
+	return ItemSlot[0];
+}
+
+int AProjectOneCharacter::GetEItem()
+{
+	return ItemSlot[1];
+}
+
+void AProjectOneCharacter::UseQItem()
+{
+	Item item = (Item)ItemSlot[0];
+	switch (item)
+	{
+	case Item::EMPTY:
+		break;
+	case Item::EVOLUTION:
+		ABLOG_S(Warning);
+		ItemSlot[0] = 0;
+		Evolution();
+		break;
+	case Item::HP:
+		ItemSlot[0] = 0;
+		if (Hp + 100 > MaxHp)
+			Hp = MaxHp;
+		else
+			Hp += 100;
+		break;
+	default:
+		break;
+	}
+}
+
+void AProjectOneCharacter::UseEItem()
+{
+	Item item = (Item)ItemSlot[1];
+	switch (item)
+	{
+	case Item::EMPTY:
+		break;
+	case Item::EVOLUTION:
+		ItemSlot[1] = 0;
+		Evolution();
+		break;
+	case Item::HP:
+		ItemSlot[1] = 0;
+		if (Hp + 100 > MaxHp)
+			Hp = MaxHp;
+		else
+			Hp += 100;
+		break;
+
+	default:
+		break;
+	}
 }
 
 void AProjectOneCharacter::Hit(float Damage, AActor * Causer)
@@ -489,6 +568,10 @@ void AProjectOneCharacter::Hit(float Damage, AActor * Causer)
 			
 			AHUD* HUD = Cast<AHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 			UBoolProperty* isHit = FindField<UBoolProperty>(HUD->GetClass(), HitStr);
+			
+			if (HPBarWidgetComponent->GetUserWidgetObject())
+				HPBarWidgetComponent->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+
 			if (isHit != NULL) {
 				ABLOG_S(Warning);
 
@@ -607,7 +690,7 @@ FVector AProjectOneCharacter::GetCharacterToAimeVec()
 	//	bIsOperateDamage = true;
 	//}
 	FVector reVal = FVector::ZeroVector;
-	switch (CurLevel) {
+	switch (CurLevel%2) {
 	case 0:
 		reVal = tmpVec - GetMesh()->GetSocketLocation(TEXT("Muzzle"));
 		break;
@@ -676,7 +759,7 @@ int32 AProjectOneCharacter::GetCurBullet()
 
 int32 AProjectOneCharacter::GetEvolutionLevel()
 {
-	return CurLevel;
+	return tmpLevel;
 }
 
 bool AProjectOneCharacter::CanRoll()

@@ -19,17 +19,18 @@ AEvolutionItem::AEvolutionItem()
 
 	Col->SetRelativeLocation(FVector(0.0f, 0.0f, 30.0f));
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> PJ_Mesh(TEXT("StaticMesh'/Game/BuildMap/NewFolder/Fruit/SM_Fruit_Dummy.SM_Fruit_Dummy'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> PJ_Mesh(TEXT("StaticMesh'/Game/BuildMap/NewFolder/Item_jar/SM_Item_jar.SM_Item_jar'"));
 	if (PJ_Mesh.Succeeded())
 	{
 		Mesh->SetStaticMesh(PJ_Mesh.Object);
 	}
 
+	Mesh->SetCollisionProfileName("NoCollision");
 	//Mesh->SetSimulatePhysics
-
 	/*Mesh->GetBodyInstance()->bLockXRotation = true;
 	Mesh->GetBodyInstance()->bLockYRotation = true;
 	Mesh->GetBodyInstance()->bLockZRotation = true;*/
+
 }
 
 // Called when the game starts or when spawned
@@ -38,6 +39,8 @@ void AEvolutionItem::BeginPlay()
 	Super::BeginPlay();
 
 	Col->OnComponentBeginOverlap.AddDynamic(this, &AEvolutionItem::OnCollisionOverlap);
+
+	ItemNum = FMath::RandRange(1, 2);
 
 }
 
@@ -58,7 +61,7 @@ void AEvolutionItem::OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AA
 
 	auto Character = Cast<AProjectOneCharacter>(OtherActor);
 	if (Character) {
-		Character->Evolution();
+		Character->SetItemSlot(ItemNum);
 
 	}
 

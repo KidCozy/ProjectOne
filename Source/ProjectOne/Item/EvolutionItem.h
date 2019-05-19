@@ -35,4 +35,6 @@ public:
 
 	void Drop();
 
+	int ItemNum;
+
 };

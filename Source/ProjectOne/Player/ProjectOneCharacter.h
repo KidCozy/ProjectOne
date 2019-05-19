@@ -23,6 +23,14 @@ protected:
 		LEFT,
 		RIGHT
 	};
+	
+	enum class Item 
+	{
+		EMPTY,
+		EVOLUTION,
+		HP
+	};
+
 public:
 	AProjectOneCharacter(); 
 
@@ -65,6 +73,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
+
+	UPROPERTY(VisibleAnywhere, Category = UI)
+	class UWidgetComponent* HPBarWidgetComponent;
 	
 	UPROPERTY()
 	class AWeapon* Weapone;
@@ -87,6 +98,7 @@ public:
 
 	virtual void Evolution();
 
+
 	UFUNCTION(BlueprintCallable)
 	void CalcMagneticFieldDamage(float Damage);
 
@@ -106,6 +118,19 @@ public:
 	int32 GetEvolutionLevel();
 
 	void ReLoad();
+
+	TArray<int> ItemSlot;
+
+	void SetItemSlot(int ItemNum);
+
+	UFUNCTION(BlueprintCallable)
+	int GetQItem();
+
+	UFUNCTION(BlueprintCallable)
+	int GetEItem();
+
+	void UseQItem();
+	void UseEItem();
 
 protected: // protected 함수 영역
 	
@@ -196,6 +221,7 @@ protected:
 	float RayNearDistance;
 	//레이로 데미지가 이미 처리 되었나?
 	bool bIsOperateDamage;
+	int32 tmpLevel;
 	int32 CurLevel;
 	FVector InputVector;
 	FVector ScratchNormal;
