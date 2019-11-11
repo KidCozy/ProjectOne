@@ -6,7 +6,7 @@
 #include "Animation/PlayerCharacterAnimInstance.h"
 #include "GameFramework/Character.h"
 #include "Environments/ShaderInfo.h"
-#include"Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "ProjectOneCharacter.generated.h"
 
 
@@ -18,8 +18,9 @@ class AProjectOneCharacter : public ACharacter
 	/** Camera boom positioning the camera behind the character */
 protected:
 	enum class RollDir {
-		FRONT,
-		BACK,
+		//FRONT,
+		//BACK,
+		RELEASE,
 		LEFT,
 		RIGHT
 	};
@@ -31,42 +32,8 @@ protected:
 		HP
 	};
 
-public:
+public://public 자원
 	AProjectOneCharacter(); 
-
-	UPROPERTY()
-	TArray<UMaterialInstance*> ShaderInstance;
-
-	UPROPERTY()
-	TArray<UMaterialInstanceDynamic*> DynamicShader;
-
-	UPROPERTY()
-	TArray<UMaterialInterface*> Mat;
-	//빌드끝나고 손볼것
-	UPROPERTY(VisibleAnywhere)
-	USkeletalMeshComponent* SecondMeshComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	USkeletalMesh* ThirdMesh;
-
-	UPROPERTY(VisibleAnywhere)
-	USkeletalMesh* FirstMesh;
-
-	//진화
-	UPROPERTY(VisibleAnywhere)
-	class USkeletalMesh* SecondSkMesh;
-
-	UPROPERTY(VisibleAnywhere)
-	class UClass* SecondAnimIns;
-
-	UPROPERTY(VisibleAnywhere)
-	class UClass* ThirdAnimIns;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-	class USpringArmComponent* CameraBoom;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -74,82 +41,85 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
-	UPROPERTY(VisibleAnywhere, Category = UI)
+	UPROPERTY(VisibleAnywhere)
+	class UPlayerCharacterAnimInstance* APAnim;
+
+	//components
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	class USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	class UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, Category = Effect)
+	UParticleSystemComponent* SheildEffect;
+
+	UPROPERTY(VisibleAnywhere, Category = Effect)
+	UParticleSystemComponent* HealEffect;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory)
+	class UInventoryComponent* Inventory;
+
+	UPROPERTY(BlueprintReadWrite, Category = UI)
 	class UWidgetComponent* HPBarWidgetComponent;
-	
-	UPROPERTY()
-	class AWeapon* Weapone;
 
-	UPROPERTY()
-	float Hp;
+	UPROPERTY(BlueprintReadOnly, Category = Stat)
+	class UPlayerStatComponent* CharacterStat;
 
-	UPROPERTY()
-	float MaxHp;
+	UPROPERTY(BlueprintReadOnly)
+	class USuperGun* Gun;
 
-	void Hit(float Damage, AActor * Causer);
+	//EvolutionData
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMesh* FirstMesh;
 
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMesh* SecondSkMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMesh* ThirdMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	UClass* SecondAnimIns;
+
+	UPROPERTY(VisibleAnywhere)
+	UClass* ThirdAnimIns;
+
+	//HitUI용
+	UPROPERTY(BlueprintReadOnly)
+	AActor * LastHitByChracter;
+
+	UPROPERTY(VisibleAnywhere)
+	E_PlayerSelect PlayerType;
+
+	UPROPERTY(BlueprintReadWrite)
+	int KillCount = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool isHit;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool AteHealItem;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool isAim;
+
+	bool isPause;
 	bool IsAlive;
-
-	UINT EvolutionLevel = 0;
-
-	FTimerHandle DeadTimer;
-
+	bool ShootInput;
 	int DeadTime;
 
-	virtual void Evolution();
+	int32 CurLevel;
 
-
-	UFUNCTION(BlueprintCallable)
-	void CalcMagneticFieldDamage(float Damage);
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetHP();
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetMaxHP();
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetMaxBullet();
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetCurBullet();
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetEvolutionLevel();
-
-	void ReLoad();
-
-	TArray<int> ItemSlot;
-
-	void SetItemSlot(int ItemNum);
-
-	UFUNCTION(BlueprintCallable)
-	int GetQItem();
-
-	UFUNCTION(BlueprintCallable)
-	int GetEItem();
-
-	void UseQItem();
-	void UseEItem();
+	FTimerHandle DeadTimer;
 
 protected: // protected 함수 영역
 	
 	// 진입점, 초기화
 	virtual void SetResources(); // 리소스 로드 (초기화)
 	virtual void SetComponents();
-	virtual void SetInitWeapone();
 
-	virtual void SetTextureParameter(USkeletalMeshComponent* Comp, UINT Index, UTexture* Tex);
-	virtual void SetScalarParameter(USkeletalMeshComponent* Comp,UINT MaterialIndex, UINT ParameterIndex, float Value);
-	virtual void SetVectorParameter(USkeletalMeshComponent* Comp, UINT Index, FLinearColor Value);
-
-	virtual bool GetDissolveAmount(UMaterialInstance* Inst, float& OutValue) const { return Inst->GetScalarParameterValue(FMaterialParameterInfo("Amount"), OutValue); }
-
-	// 아무 쓸모없는 VR코드
-	void OnResetVR();
-	//void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
-	//void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
-
+	
 	// 조작 함수
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -159,76 +129,75 @@ protected: // protected 함수 영역
 	// 액션 함수
 	void Shot();
 	void Roll();
+	void MoveReleased();
 	void Aim();
 	void ReloadAnimPlay();
-	//virtual void ForwardDash();
-	//virtual void BackDash();
-	//virtual void LeftDash();
-	//virtual void RightDash();
-
-	void MoveReleased();
-	void JumpInput();
+	void UseItem1();
+	void UseItem2();
+	void UseItem3();
+	void UseItem4();
+	void UseItem5();
 
 	// 화면FX
 	void PlayCShake(int Index);
-	
 	virtual void Shooting(float tick);
-
-	void Dead();
-	FVector GetCharacterToAimeVec();
-protected: // protected 자원 영역
-	
-	// 전역
-	const UWorld* const World = GetWorld(); 
-
-	APlayerController* PlayerController;
-
-	UPROPERTY(VisibleAnywhere)
-	class UPlayerCharacterAnimInstance* APAnim;
-
-	UPROPERTY(VisibleAnywhere)
-	TArray<TSubclassOf<UCameraShake>> CShakeList;
-
-	UPROPERTY(VisibleAnywhere, Category = Stat)
-	class UPlayerStatComponent* CharacterStat;
-
-
-	UPROPERTY()
-	bool isShooting;
-
-
-
-protected:
-	// APawn interface
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual void PostInitializeComponents() override;
-	virtual void Tick(float delta) override;
-	virtual void BeginPlay() override;
-	virtual void SetAmount();
-	// End of APawn interface
 
 public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	UFUNCTION(BlueprintCallable)
+	void CalcMagneticFieldDamage(float Damage);
 
-private:
-	bool CanRoll();
+	UFUNCTION(BlueprintCallable)
+	int32 GetEvolutionLevel() { return CurLevel; }
+
+	UFUNCTION(BlueprintCallable)
+	void Win();
+
+	UFUNCTION(BlueprintCallable)
+	void Lose();
+
+	UFUNCTION(BlueprintCallable)
+	void Hit(float Damage, bool isHead, AActor * Causer);
+
+	float CalcDamage(float Damage, bool isHead);
+
+	void Dead();
+	void ReLoad();
+	virtual void Evolution();
+
+protected://protected
+	// APawn interface
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void PostInitializeComponents() override;
+	virtual void Tick(float delta) override;
+	virtual void BeginPlay() override;
+	virtual void PossessedBy(AController * ct) override;
+	// End of APawn interface
+
 
 protected:
-	float intervalTime = 0.0f;
-	//총 쐈을때 이 거리보다 가까우면 총알을 쏘지않고 데미지를 주는 변수
-	float RayNearDistance;
-	//레이로 데미지가 이미 처리 되었나?
-	bool bIsOperateDamage;
-	int32 tmpLevel;
-	int32 CurLevel;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<TSubclassOf<UCameraShake>> CShakeList;
+
+	UPROPERTY(VisibleAnywhere, Category = Effect)
+	UParticleSystemComponent* EvolEffect;
+
+	const UWorld* const World = GetWorld(); 
+
+	APlayerController* PlayerController;
+
+	RollDir rollDir;
 	FVector InputVector;
 	FVector ScratchNormal;
-	float curAmount = 0.0f;
-	float SecCurAmount = 0.5f;
-	FTimerHandle EvolutionTimer;
-	RollDir rollDir;
-	bool isAim;
+	float intervalTime = 0.0f;
+
+	bool isShooting;
+
+	//없애야 되는거
+	UPROPERTY()
+	class AWeapon* Weapone;
 };
 

@@ -8,8 +8,11 @@ public class ProjectOne : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "Paper2D", "UMG", "NavigationSystem", "AIModule" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore",
+            "HeadMountedDisplay", "Paper2D", "UMG", "NavigationSystem", "AIModule", "AkAudio" });
 
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+
+        DynamicallyLoadedModuleNames.AddRange(new string[] {  });
     }
 }

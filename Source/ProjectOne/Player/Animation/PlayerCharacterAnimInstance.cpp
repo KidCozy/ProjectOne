@@ -20,6 +20,12 @@ UPlayerCharacterAnimInstance::UPlayerCharacterAnimInstance() {
 	SetMontage();
 }
 
+void UPlayerCharacterAnimInstance::RollBackMontage()
+{
+	if (isShooting)
+		Montage_JumpToSection("Default");
+}
+
 void UPlayerCharacterAnimInstance::AnimNotify_RollEnd()
 {
 	isRoll = false;
@@ -42,6 +48,19 @@ void UPlayerCharacterAnimInstance::AnimNotify_ReloadEnd()
 	}
 }
 
+void UPlayerCharacterAnimInstance::AnimNotify_Shootable()
+{
+	auto Pawn = TryGetPawnOwner();
+	if (::IsValid(Pawn))
+	{
+		auto Character = Cast<AProjectOneCharacter>(Pawn);
+		if (Character->ShootInput)
+			isShooting = true;
+		else
+			isShooting = false;
+	}
+}
+
 void UPlayerCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds) {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
@@ -53,4 +72,5 @@ void UPlayerCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds) {
 		if (Character)
 			isInAir = Character->GetMovementComponent()->IsFalling();
 	}
+
 }

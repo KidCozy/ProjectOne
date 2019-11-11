@@ -11,6 +11,8 @@
 #include "Runtime/AIModule/Classes/Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/WidgetComponent.h"
 #include "Components/Widget.h"
+#include "Player/POComponents/PlayerStatComponent.h"
+#include "Weapons/SuperGun.h"
 #include "ProjectOneAIController.h"
 
 
@@ -54,7 +56,7 @@ void AAICharacter::Tick(float delta)
 
 	//if (IsLookAround)
 	//	LookAround();
-	//Update();
+	Update();
 
 	if (isShooting)
 	{
@@ -64,14 +66,14 @@ void AAICharacter::Tick(float delta)
 		}
 		Shooting(delta);
 	}
-	
+
 	/*if (DetectedCovers.Num() != 0) {
 		LookAt(FVector(2740.0f, -2500.0f, 0.0f));
 		if (IsLookTarget) {
 			NextCover(FVector(2740.0f, -2500.0f, 0.0f));
 			IsLookTarget = false;
 		}
-	
+
 	}
 	else
 	{
@@ -87,7 +89,7 @@ void AAICharacter::Tick(float delta)
 	//ABLOG(Warning,TEXT("TargetCoverPos : %f, %f ,%f"),TargetCoverPos.X, TargetCoverPos.Y, TargetCoverPos.Z )
 
 	//RightDash();
-	
+
 	//Update();
 
 	//GetController()->SetControlRotation()
@@ -103,10 +105,10 @@ void AAICharacter::Tick(float delta)
 
 	//ABLOG(Warning, TEXT("Target GetLandPosZ : %f"), GetLandPosZ(-612.0f, 1082.0f));
 	//ABLOG(Warning, TEXT("Player GetLandPosZ : %f"), GetLandPosZ(-12000.0f, 21946.0f));
-	if (GetLandPosZ(-14100.0f, 17200.0f) == 0.0f || TargetLocationPos.Z ==0.0f) {
+	if (GetLandPosZ(-14102.0f, 17263.0f) == 0.0f || TargetLocationPos.Z == 0.0f) {
 		SetRandomLocation();
 	}
-	Update();
+	//Update();
 	//AICon->MoveToLocation(FVector(9200.0f, 11265.0f, 749.0f));
 }
 
@@ -177,14 +179,14 @@ void AAICharacter::Forward()
 	//GetWorld()->GetTimerManager().ClearTimer(Delay);
 
 	//CheckObstacle();
-	
+
 
 	/*if (DirectionVec == MoveVec::LeftVec)
 		Left();
 	else if (DirectionVec == MoveVec::RightVec)
 		RIght();*/
 
-	
+
 }
 
 void AAICharacter::Back()
@@ -251,7 +253,7 @@ void AAICharacter::LookAt(FVector LookPos)
 
 	//ABLOG(Warning, TEXT("%f,%f,%f"), rot.Pitch,rot.Yaw,rot.Roll);
 
-	GetController()->SetControlRotation(rot);	
+	GetController()->SetControlRotation(rot);
 }
 
 void AAICharacter::LookAround()
@@ -314,39 +316,11 @@ void AAICharacter::LookAroundStart()
 
 void AAICharacter::Shooting(float tick)
 {
-	if (isShooting) {
-		if (intervalTime >= Weapone->IntervalTime) {
-			FTimerHandle time_;//bulletCheck
-			if (Weapone->CurBulletCount <= 0)
-			{
-				ReLoad();
-			}
-
-			//Spread Bullet
-			float RandPitch = FMath::RandRange(-(Weapone->Spread*0.5f), Weapone->Spread*0.5f);
-			float RandYaw = FMath::RandRange(-(Weapone->Spread*0.5f), Weapone->Spread*0.5f);
-
-			FRotator SpreadRotation = FRotator(
-				GetCharacterToAimeVec().Rotation().Pitch + RandPitch,
-				//GetCharacterToAimeVec().Rotation().Pitch,
-				//GetCharacterToAimeVec().Rotation().Yaw, 0.0f);
-				GetCharacterToAimeVec().Rotation().Yaw + RandYaw, 0.0f);
-
-			FVector SpreadVec = SpreadRotation.Vector().GetSafeNormal();
-			Weapone->Shot(GetMesh()->GetSocketLocation(TEXT("Muzzle")), SpreadRotation, ScratchNormal);
-
-
-			//Recol
-			float PitchVal = FMath::RandRange(Weapone->VerticalRecoil * 0.7f, Weapone->VerticalRecoil);
-			float YawVal = FMath::RandRange(-Weapone->HorizonRecoil * 0.5f, Weapone->HorizonRecoil*0.5f);
-			AddControllerPitchInput(-PitchVal);
-			AddControllerYawInput(YawVal);
-		}
-		intervalTime -= tick;
-		if (intervalTime <= 0.0f) {
-			intervalTime = Weapone->IntervalTime;
-		}
+	if (Gun->GetCurBullet() <= 0){
+		ReloadAnimPlay();
+		isShooting = false;
 	}
+	Gun->Fire(GetMesh()->GetSocketLocation(TEXT("Muzzle")),true);
 }
 
 FVector AAICharacter::Prediction()
@@ -354,26 +328,14 @@ FVector AAICharacter::Prediction()
 	if (TargetPlayer == NULL)
 		return FVector::ZeroVector;
 
-
-	FRotator SpreadRotation = FRotator(
-		GetCharacterToAimeVec().Rotation().Pitch ,
-		//GetCharacterToAimeVec().Rotation().Pitch,
-		//GetCharacterToAimeVec().Rotation().Yaw, 0.0f);
-		GetCharacterToAimeVec().Rotation().Yaw, 0.0f);
-
-	FVector SpreadVec = SpreadRotation.Vector().GetSafeNormal();
-
-
-
-	
-	float distance = FVector::Distance(Weapone->GetActorLocation(), TargetPlayer->GetActorLocation());
+	float distance = FVector::Distance(GetMesh()->GetSocketLocation(TEXT("Muzzle")), TargetPlayer->GetActorLocation());
 
 
 	//float time = distance / 5.0f;
 
 	//ABLOG(Warning, TEXT("BUllet vector size :  %f, %f, %f"), (SpreadVec * 3000.0f).X, (SpreadVec * 3000.0f).Y, (SpreadVec * 3000.0f).Z);
 
-	float test = (TargetPlayer->GetVelocity() - (SpreadVec * 50000.0f)).Size();
+	float test = (TargetPlayer->GetVelocity() - (FollowCamera->GetForwardVector() * 50000.0f)).Size();
 
 	//ABLOG(Warning, TEXT("Velocity : %f, %f ,%f"), TargetPlayer->GetVelocity().X, TargetPlayer->GetVelocity().Y, TargetPlayer->GetVelocity().Z);
 
@@ -404,28 +366,16 @@ void AAICharacter::Update()
 		APAnim->Montage_Play(APAnim->ShotMontage);
 
 	}
-	else if(!isShooting)
+	else if (!isShooting)
 	{
 		//ABLOG(Warning, TEXT("!PlayMontage"));
 		APAnim->Montage_Stop(0.5f, APAnim->ShotMontage);
-		
-
 	}
-
-	if (isShooting && !APAnim->Montage_IsPlaying(APAnim->SecondShotMontage))
-	{
-		APAnim->Montage_Play(APAnim->SecondShotMontage);
-	}
-	else if (!isShooting)
-	{
-		APAnim->Montage_Stop(0.5f, APAnim->SecondShotMontage);
-	}
-
 
 	//ABLOG(Warning, TEXT("isShooting :   %d"), isShooting);
 
 	//ABLOG(Warning, TEXT("STATE : %d"), CurState);
-	
+
 	//ABLOG(Warning, TEXT("TargetLocation :   %f, %f, %f"), TargetLocationPos.X, TargetLocationPos.Y, TargetLocationPos.Z);
 	if (IsAlive) {
 		switch (CurState)
@@ -466,9 +416,7 @@ void AAICharacter::Update()
 					Forward();
 				else
 					RIght();
-
-
-				if (Hp<40.0f && TargetPlayer->Hp > Hp)
+				if (CharacterStat->CurHP<40.0f && TargetPlayer->CharacterStat->CurHP > CharacterStat->CurHP)
 					CurState = AIState::Diffensive;
 			}
 			break;
@@ -487,7 +435,10 @@ void AAICharacter::Update()
 
 			if (TargetPlayer != NULL) {
 
-				//LookAt(TargetPlayer->GetActorLocation());
+				if (!isShooting)
+					Shot();
+
+				LookAt(TargetPlayer->GetActorLocation());
 				Back();
 			}
 
@@ -522,7 +473,7 @@ void AAICharacter::MoveCover()
 			//LookAt(TargetCoverPos);
 			//ABLOG(Warning, TEXT("Look Target"));
 		}
-			//AICon->MoveToLocation(TargetCoverPos);
+		//AICon->MoveToLocation(TargetCoverPos);
 
 		AICon->MoveToLocation(TargetLocationPos);
 		//AICon->MoveToActor(GetWorld()->GetFirstPlayerController()->GetPawn());
@@ -539,8 +490,8 @@ void AAICharacter::NextCover()
 
 	TargetCover = NULL;
 
-		for (int i = 0; i<DetectedCovers.Num(); i++)
-		{
+	for (int i = 0; i < DetectedCovers.Num(); i++)
+	{
 		/*	if (FVector::Distance(DetectedCovers[i]->GetActorLocation(), GetActorLocation()) < 250.0f) {
 				ABLOG_S(Warning);
 				if(i != DetectedCovers.Num()-1)
@@ -548,61 +499,61 @@ void AAICharacter::NextCover()
 				continue;
 			}*/
 
-			if (PastCovers.Contains(DetectedCovers[i])) {
-				//ABLOG(Warning, TEXT("test debug"));
-				continue;
-			}
-
-
-			if (TargetCover == NULL)
-				TargetCover = DetectedCovers[i];
-
-			if (Distance(GetActorLocation(), DetectedCovers[i]->GetActorLocation()) < Distance(GetActorLocation(), TargetCover->GetActorLocation()))
-			{
-				TargetCover = DetectedCovers[i];
-			}
-
-			//ABLOG(Warning, TEXT("TargetCover : %s"), *TargetCover->GetName());
-			//ABLOG(Warning,TEXT("TargetCover Distance : %f"), Distance(TargetCover->GetActorLocation(), GetActorLocation()))
-				
-			
-			//ABLOG(Warning, TEXT("%f"), IsMoving);
-			
+		if (PastCovers.Contains(DetectedCovers[i])) {
+			//ABLOG(Warning, TEXT("test debug"));
+			continue;
 		}
 
 
-		if (TargetCover) {
+		if (TargetCover == NULL)
+			TargetCover = DetectedCovers[i];
 
-			if (PastCovers.Num() > 2)
-			{
-				PastCovers.RemoveAt(0);
-			}
-			PastCovers.Add(TargetCover);
-
-			for (int i = 0; i < TargetCover->SafePos.Num(); i++)
-			{
-				if (TargetCoverPos == FVector::ZeroVector)
-					TargetCoverPos = TargetCover->SafePos[i];
-
-				if (Distance(GetActorLocation(), TargetCover->SafePos[i]) < Distance(GetActorLocation(), TargetCoverPos))
-				{
-					TargetCoverPos = TargetCover->SafePos[i];
-				}
-			}
-
-			IsMoving = true;
+		if (Distance(GetActorLocation(), DetectedCovers[i]->GetActorLocation()) < Distance(GetActorLocation(), TargetCover->GetActorLocation()))
+		{
+			TargetCover = DetectedCovers[i];
 		}
-
-
 
 		//ABLOG(Warning, TEXT("TargetCover : %s"), *TargetCover->GetName());
+		//ABLOG(Warning,TEXT("TargetCover Distance : %f"), Distance(TargetCover->GetActorLocation(), GetActorLocation()))
 
-		/*if (PastCovers.Num() > 2)
+
+		//ABLOG(Warning, TEXT("%f"), IsMoving);
+
+	}
+
+
+	if (TargetCover) {
+
+		if (PastCovers.Num() > 2)
 		{
-			PastCovers.RemoveAt(2);
+			PastCovers.RemoveAt(0);
+		}
+		PastCovers.Add(TargetCover);
+
+		for (int i = 0; i < TargetCover->SafePos.Num(); i++)
+		{
+			if (TargetCoverPos == FVector::ZeroVector)
+				TargetCoverPos = TargetCover->SafePos[i];
+
+			if (Distance(GetActorLocation(), TargetCover->SafePos[i]) < Distance(GetActorLocation(), TargetCoverPos))
+			{
+				TargetCoverPos = TargetCover->SafePos[i];
+			}
 		}
 
-		PastCovers.Push(TargetCover);*/
+		IsMoving = true;
+	}
+
+
+
+	//ABLOG(Warning, TEXT("TargetCover : %s"), *TargetCover->GetName());
+
+	/*if (PastCovers.Num() > 2)
+	{
+		PastCovers.RemoveAt(2);
+	}
+
+	PastCovers.Push(TargetCover);*/
 
 
 }
@@ -701,25 +652,25 @@ void AAICharacter::MoveToLocation(FVector Location)
 		TargetLocationPos = Location;
 
 		//ABLOG(Warning, TEXT("Cover : %d"),DetectedCovers.Num())
-		
 
-			if (DetectedCovers.Num() > 1 && TargetCover) {
-				NextCover(Location);
-				MoveCover();
-			}
-			else 
-			{
-				/*if(DirectionVec == MoveVec::ForwardVec && LeftCheck && RigthCheck)
-				LookAt(TargetLocationPos);
-				Forward();*/
+
+		if (DetectedCovers.Num() > 1 && TargetCover) {
+			NextCover(Location);
+			MoveCover();
+		}
+		else
+		{
+			/*if(DirectionVec == MoveVec::ForwardVec && LeftCheck && RigthCheck)
+			LookAt(TargetLocationPos);
+			Forward();*/
 
 			//	ABLOG_S(Warning);
 
 				//ABLOG(Warning,TEXT("TargetLocation : %f, %f, %f"), TargetLocationPos.X, TargetLocationPos.Y, TargetLocationPos.Z)
 
-				AICon->MoveToLocation(TargetLocationPos);
-				//AICon->MoveToActor(GetWorld()->GetFirstPlayerController()->GetPawn());
-			}
+			AICon->MoveToLocation(TargetLocationPos);
+			//AICon->MoveToActor(GetWorld()->GetFirstPlayerController()->GetPawn());
+		}
 	}
 	else if (Hiding)
 	{
@@ -739,7 +690,7 @@ void AAICharacter::MoveToLocation(FVector Location)
 void AAICharacter::Hide(AActor * Attacker)
 {
 	ABCHECK(IsValid(TargetCover))
-	ABCHECK(IsValid(Cast<AProjectOneCharacter>(Attacker)));
+		ABCHECK(IsValid(Cast<AProjectOneCharacter>(Attacker)));
 	auto Character = Cast<AProjectOneCharacter>(Attacker);
 
 	FHitResult OutHit;
@@ -751,7 +702,7 @@ void AAICharacter::Hide(AActor * Attacker)
 
 	//ABLOG(Warning, TEXT("Hide TargetCover :  %s"), *TargetCover->GetName());
 
-	for (int i = 0; i < TargetCover->SafePos.Num(); i++) 
+	for (int i = 0; i < TargetCover->SafePos.Num(); i++)
 	{
 		//DrawDebugLine(GetWorld(), Character->FollowCamera->GetComponentLocation(), TargetCover->SafePos[i], FColor::Green, false, 5.0f, 0, 1);
 		if (GetWorld()->LineTraceSingleByChannel(OutHit, Character->FollowCamera->GetComponentLocation(), TargetCover->SafePos[i], ECC_Visibility, CollisionParams))
@@ -776,7 +727,7 @@ void AAICharacter::Hide(AActor * Attacker)
 		Hiding = true;
 		TargetPlayer = Character;
 	}
-		//AICon->MoveToLocation(TargetCoverPos);
+	//AICon->MoveToLocation(TargetCoverPos);
 }
 
 void AAICharacter::SetRandomLocation()
@@ -789,7 +740,7 @@ void AAICharacter::SetRandomLocation()
 	float rand = FMath::RandRange(4000.0f, 7000.0f);
 	FVector MaxLocation = GetActorForwardVector() * rand;
 
-	
+
 
 	if (DetectedCovers.Num() > 1) {
 		for (int i = 0; i < DetectedCovers.Num(); i++)
@@ -815,8 +766,8 @@ void AAICharacter::SetRandomLocation()
 	//TargetLocationPos = FVector(MaxLocation.X, MaxLocation.Y, 1150.0f);
 
 	//while (GetLandPosZ(9200.0f, 11265.0f) == 0.0f) {
-	if(GetLandPosZ(-14100.0f, 17200.0f)!=0.0f)
-		TargetLocationPos = FVector(-14100.0f, 17200.0f, GetLandPosZ(-14100.0f, 17200.0f));
+	if (GetLandPosZ(-14102.0f, 17263.0f) != 0.0f)
+		TargetLocationPos = FVector(-14102.0f, 17263.0f, GetLandPosZ(-14102.0f, 17263.0f));
 	//}
 }
 
@@ -827,8 +778,8 @@ void AAICharacter::Attacked(AActor * Attacker)
 	case Neutral:
 
 		if (TargetCover) {
-			if(Distance(TargetCover->GetActorLocation(),GetActorLocation()) < 1500.0f)
-			Hide(Attacker);
+			if (Distance(TargetCover->GetActorLocation(), GetActorLocation()) < 1500.0f)
+				Hide(Attacker);
 			MoveEnd = false;
 		}
 		else
@@ -870,7 +821,7 @@ void AAICharacter::FindPlayer()
 			{
 				if (targetPlayer->TargetPlayer == this) {
 					CurState = AIState::Offensive;
-					
+
 				}
 				else
 					CurState = AIState::Guard;
@@ -899,15 +850,15 @@ void AAICharacter::FindPlayer()
 				CurState = AIState::Offensive;
 
 		}
-		else 
+		else
 		{
 			if (Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) < 3000.0f)
 				CurState = AIState::Offensive;
 		}
 
-				//if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) > 2000.0f)
+		//if (FVector::Distance(TargetPlayer->GetActorLocation(), GetActorLocation()) > 2000.0f)
 
-			break;
+		break;
 	}
 }
 
@@ -925,57 +876,57 @@ float AAICharacter::GetLandPosZ(float PosX, float PosY)
 {
 	FHitResult OutHit;
 
-	FVector StartPos(PosX,PosY,27000.0f);
-	FVector EndPos(PosX, PosY, 0.0f);
+	FVector StartPos(PosX, PosY, 27000.0f);
+	FVector EndPos(PosX, PosY, -5000.0f);
 
 	FCollisionQueryParams CollisionParams;
 
-	
 
-		if (GetWorld()->LineTraceSingleByChannel(OutHit, StartPos, EndPos, ECC_GameTraceChannel3, CollisionParams))
+
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, StartPos, EndPos, ECC_GameTraceChannel3, CollisionParams))
+	{
+		if (OutHit.bBlockingHit)
 		{
-			if (OutHit.bBlockingHit)
+
+			UNavigationSystemV1* navSys = UNavigationSystemV1::GetCurrent(GetWorld());
+
+			UNavigationPath* NavPath = navSys->FindPathToLocationSynchronously(GetWorld(), GetActorLocation(), FVector(PosX, PosY, OutHit.ImpactPoint.Z), NULL);
+
+			//NavPath->EnableDebugDrawing(NavPath,FLinearColor::Red);
+
+		//	ABLOG(Warning, TEXT("Path Num : %d"), NavPath->PathPoints.Num());
+			//if (NavPath->PathPoints.Num() > 0)
+				//ABLOG(Warning, TEXT("Path Target : %f, %f, %f"), NavPath->PathPoints[NavPath->PathPoints.Num()-1].X, NavPath->PathPoints[NavPath->PathPoints.Num() - 1].Y, NavPath->PathPoints[NavPath->PathPoints.Num() - 1].Z);
+
+			//NavPath->GetDebugString();
+
+			if (NavPath->PathPoints.Num() > 0)
 			{
-
-				UNavigationSystemV1* navSys = UNavigationSystemV1::GetCurrent(GetWorld());
-
-				UNavigationPath* NavPath = navSys->FindPathToLocationSynchronously(GetWorld(), GetActorLocation() , FVector(PosX, PosY, OutHit.ImpactPoint.Z), NULL);
-
-				//NavPath->EnableDebugDrawing(NavPath,FLinearColor::Red);
-
-			//	ABLOG(Warning, TEXT("Path Num : %d"), NavPath->PathPoints.Num());
-				//if (NavPath->PathPoints.Num() > 0)
-					//ABLOG(Warning, TEXT("Path Target : %f, %f, %f"), NavPath->PathPoints[NavPath->PathPoints.Num()-1].X, NavPath->PathPoints[NavPath->PathPoints.Num() - 1].Y, NavPath->PathPoints[NavPath->PathPoints.Num() - 1].Z);
-
-				//NavPath->GetDebugString();
-
-				if (NavPath->PathPoints.Num() > 0)
-				{
-					float TargetNum = NavPath->PathPoints.Num()-1;
-					if (PosX == NavPath->PathPoints[TargetNum].X && PosY == NavPath->PathPoints[TargetNum].Y)
-						return OutHit.ImpactPoint.Z;
-					else
-						return 0.0f;
-				}
+				float TargetNum = NavPath->PathPoints.Num() - 1;
+				if (PosX == NavPath->PathPoints[TargetNum].X && PosY == NavPath->PathPoints[TargetNum].Y)
+					return OutHit.ImpactPoint.Z;
 				else
-				{
 					return 0.0f;
-				}
-				//if (!NavPath->IsPartial())
-				//	return 0.0f;
-				//else
-				//return OutHit.ImpactPoint.Z;
 			}
 			else
+			{
 				return 0.0f;
+			}
+			//if (!NavPath->IsPartial())
+			//	return 0.0f;
+			//else
+			//return OutHit.ImpactPoint.Z;
 		}
 		else
-		{
 			return 0.0f;
-		}
+	}
+	else
+	{
+		return 0.0f;
+	}
 
 
-	
+
 }
 
 
@@ -1009,7 +960,7 @@ void AAICharacter::Detected()
 		ECollisionChannel::ECC_GameTraceChannel2,
 		FCollisionShape::MakeSphere(200.0f),
 		CollisionQuery
-		);
+	);
 
 
 	FHitResult OutHit;
@@ -1029,7 +980,7 @@ void AAICharacter::Detected()
 
 
 
-		Attacked(Bullet->GetOwner());
+		//Attacked(Bullet->GetOwner());
 		//Hide(Bullet->GetOwner());
 	}
 
@@ -1089,7 +1040,7 @@ void AAICharacter::Detected()
 					{
 						//ABLOG_S(Warning);
 						//DrawDebugLine(GetWorld(), FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector()*200.0f, Cover->GetActorLocation(), FColor::Red, false, 0.2f, 0, 1);
-						
+
 
 						if (OutHit.GetActor()->GetActorLocation() == Cover->GetActorLocation())
 						{
@@ -1106,12 +1057,12 @@ void AAICharacter::Detected()
 							//GEngine->AddOnScreenDebugMessage(i, 5.0f, FColor::Blue, *OverlapResult.GetActor()->GetName());
 							if (TargetLocationPos != FVector::ZeroVector)
 							{
-								if(Distance(GetActorLocation(), OutHit.GetActor()->GetActorLocation()) < Distance(GetActorLocation(), TargetLocationPos))
+								if (Distance(GetActorLocation(), OutHit.GetActor()->GetActorLocation()) < Distance(GetActorLocation(), TargetLocationPos))
 									DetectedCovers.AddUnique(Cover);
 
 							}
 							else
-							DetectedCovers.AddUnique(Cover);
+								DetectedCovers.AddUnique(Cover);
 						}
 						else
 						{
@@ -1191,10 +1142,10 @@ void AAICharacter::CheckObstacle()
 							//오른쪽 왼쪽 둘다 맞았을때
 							if (LeftHit.bBlockingHit)
 							{
-							//	ABLOG(Warning, TEXT("right and left enter"));
+								//	ABLOG(Warning, TEXT("right and left enter"));
 								if (FMath::Abs(OutHit.Distance - LeftHit.Distance) < 10.0f)
 								{
-								//	ABLOG(Warning, TEXT("right and left same"));
+									//	ABLOG(Warning, TEXT("right and left same"));
 									float rand = FMath::RandRange(0, 1);
 									//ABLOG(Warning, TEXT("Rand : %f"), rand);
 									if (rand > 0.5f) {
@@ -1238,18 +1189,18 @@ void AAICharacter::CheckObstacle()
 					}
 					else
 					{
-					//	//둘다 안맞았을때
-					////	ABLOG(Warning, TEXT("not"));
-					//	float rand = FMath::RandRange(0, 1);
-					//	//ABLOG(Warning, TEXT("Rand : %f"), rand);
-					//	if (rand > 0.5f) {
-					//		DirectionVec = MoveVec::RightVec;
-					//		LookAt(End);
-					//	}F
-					//	else {
-					//		DirectionVec = MoveVec::LeftVec;
-					//		LookAt(LeftVec);
-					//	}
+						//	//둘다 안맞았을때
+						////	ABLOG(Warning, TEXT("not"));
+						//	float rand = FMath::RandRange(0, 1);
+						//	//ABLOG(Warning, TEXT("Rand : %f"), rand);
+						//	if (rand > 0.5f) {
+						//		DirectionVec = MoveVec::RightVec;
+						//		LookAt(End);
+						//	}F
+						//	else {
+						//		DirectionVec = MoveVec::LeftVec;
+						//		LookAt(LeftVec);
+						//	}
 					}
 				}
 
@@ -1316,8 +1267,7 @@ bool AAICharacter::CheckLocation(FVector Pos)
 	return Distance(Pos, GetActorLocation()) < 50.0f;
 }
 
-void AAICharacter::SetResources()
-{
+void AAICharacter::SetResources() {
 	static ConstructorHelpers::FClassFinder<UCameraShake> CSHAKE_FIRE(TEXT("Blueprint'/Game/ScreenFX/CShake_Fire.CShake_Fire_C'"));
 	if (CSHAKE_FIRE.Succeeded())
 		CShakeList.Add(CSHAKE_FIRE.Class);
@@ -1326,7 +1276,6 @@ void AAICharacter::SetResources()
 	if (SK_MANEQUIN.Succeeded()) {
 		GetMesh()->SetSkeletalMesh(SK_MANEQUIN.Object);
 		FirstMesh = SK_MANEQUIN.Object;
-		SecondMeshComponent->SetSkeletalMesh(FirstMesh);
 	}
 
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -42.0f), FRotator(0.0f, -90.0f, 0.0f));
@@ -1334,16 +1283,11 @@ void AAICharacter::SetResources()
 	static ConstructorHelpers::FClassFinder<UAnimInstance> TEMP_ANIM(TEXT("AnimBlueprint'/Game/Animations/Wolf1/BP_Wolf1.BP_Wolf1_C'"));
 	if (TEMP_ANIM.Succeeded()) {
 		GetMesh()->SetAnimInstanceClass(TEMP_ANIM.Class);
-		SecondMeshComponent->SetAnimInstanceClass(TEMP_ANIM.Class);
 	}
-
-
 
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_Sec(TEXT("SkeletalMesh'/Game/Animations/Wolf2Build/SK_Wolf2_Idle.SK_Wolf2_Idle'"));
 	if (SK_Sec.Succeeded()) {
 		SecondSkMesh = SK_Sec.Object;
-		//SecondMeshComponent->SetSkeletalMesh(SecondSkMesh);
-		SecondMeshComponent->SetVisibility(false);
 	}
 
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_THIRD(TEXT("SkeletalMesh'/Game/Animations/Wolf3Build/SK_Wolf3_Idle.SK_Wolf3_Idle'"));
@@ -1361,484 +1305,29 @@ void AAICharacter::SetResources()
 		ThirdAnimIns = ANIM_THIRD.Class;
 	}
 
-	//유년기 Material 설정
-
-	Mat.Add(GetMesh()->GetMaterial(0));
-	Mat.Add(GetMesh()->GetMaterial(1));
-	Mat.Add(GetMesh()->GetMaterial(2));
-
-	DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(0, Mat[0]));
-	DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(0, Mat[0]));
-
-	DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(1, Mat[1]));
-	DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(1, Mat[1]));
-
-	DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(2, Mat[2]));
-	DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(2, Mat[2]));
-
-	GetMesh()->SetMaterial(0, DynamicShader[0]);
-	SecondMeshComponent->SetMaterial(0, DynamicShader[1]);
-
-	GetMesh()->SetMaterial(1, DynamicShader[2]);
-	SecondMeshComponent->SetMaterial(1, DynamicShader[3]);
-
-	GetMesh()->SetMaterial(2, DynamicShader[4]);
-	SecondMeshComponent->SetMaterial(3, DynamicShader[5]);
-
-
-
-	DynamicShader[0]->SetScalarParameterValue("Amount", 0.0f);
-	DynamicShader[0]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-	DynamicShader[0]->SetScalarParameterValue("Fringe", 40.0f);
-	DynamicShader[0]->SetScalarParameterValue("Offset", 3.5f);
-	DynamicShader[0]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-	DynamicShader[0]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-	DynamicShader[1]->SetScalarParameterValue("Amount", 0.5f);
-	DynamicShader[1]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-	DynamicShader[1]->SetScalarParameterValue("Fringe", 40.0f);
-	DynamicShader[1]->SetScalarParameterValue("Offset", 3.5f);
-	DynamicShader[1]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-	DynamicShader[1]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-
-	DynamicShader[2]->SetScalarParameterValue("Amount", 0.0f);
-	DynamicShader[2]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-	DynamicShader[2]->SetScalarParameterValue("Fringe", 40.0f);
-	DynamicShader[2]->SetScalarParameterValue("Offset", 3.5f);
-	DynamicShader[2]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-	DynamicShader[2]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-	DynamicShader[3]->SetScalarParameterValue("Amount", 0.5f);
-	DynamicShader[3]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-	DynamicShader[3]->SetScalarParameterValue("Fringe", 40.0f);
-	DynamicShader[3]->SetScalarParameterValue("Offset", 3.5f);
-	DynamicShader[3]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-	DynamicShader[3]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-	DynamicShader[4]->SetScalarParameterValue("Amount", 0.0f);
-	DynamicShader[4]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-	DynamicShader[4]->SetScalarParameterValue("Fringe", 40.0f);
-	DynamicShader[4]->SetScalarParameterValue("Offset", 3.5f);
-	DynamicShader[4]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-	DynamicShader[4]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-	DynamicShader[5]->SetScalarParameterValue("Amount", 0.5f);
-	DynamicShader[5]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-	DynamicShader[5]->SetScalarParameterValue("Fringe", 40.0f);
-	DynamicShader[5]->SetScalarParameterValue("Offset", 3.5f);
-	DynamicShader[5]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-	DynamicShader[5]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-
-
-
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> EVOLUTION_END_MATERIAL(TEXT("MaterialInstanceConstant'/Game/Animations/Wolf2Build/Material/Barrier_Invert_Micro_2_Inst.Barrier_Invert_Micro_2_Inst'"));
-	if (EVOLUTION_END_MATERIAL.Succeeded()) {
-
-		ABLOG(Warning, TEXT("TEST"));
-
-		GetMesh()->SetMaterial(3, EVOLUTION_END_MATERIAL.Object);
-		SecondMeshComponent->SetMaterial(3, EVOLUTION_END_MATERIAL.Object);
-
-		Mat.Add(GetMesh()->GetMaterial(3));
-
-		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(3, Mat[3]));
-		DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(3, Mat[3]));
-
-		GetMesh()->SetMaterial(3, DynamicShader[6]);
-		SecondMeshComponent->SetMaterial(3, DynamicShader[7]);
-
-
-		DynamicShader[6]->SetScalarParameterValue("Amount", 0.5f);
-		DynamicShader[6]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[6]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[6]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[6]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-		DynamicShader[6]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-		DynamicShader[7]->SetScalarParameterValue("Amount", 0.5f);
-		DynamicShader[7]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[7]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[7]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[7]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-		DynamicShader[7]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-	}
-
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> EVOLUTION_THIRDDOWN_MATERIAL(TEXT("MaterialInstanceConstant'/Game/Animations/Wolf3Build/Material/M_Wolf3EvolutionMat_Down_Inst.M_Wolf3EvolutionMat_Down_Inst'"));
-	if (EVOLUTION_THIRDDOWN_MATERIAL.Succeeded())
+	EvolEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("EVOLEFFECT"));
+	EvolEffect->SetupAttachment(RootComponent);
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> P_EVOL(TEXT("ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_gaither.P_ky_gaither'"));
+	if (P_EVOL.Succeeded())
 	{
-
-		GetMesh()->SetMaterial(4, EVOLUTION_THIRDDOWN_MATERIAL.Object);
-		SecondMeshComponent->SetMaterial(4, EVOLUTION_THIRDDOWN_MATERIAL.Object);
-
-		Mat.Add(GetMesh()->GetMaterial(4));
-
-		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(4, Mat[4]));
-		DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(4, Mat[4]));
-
-		GetMesh()->SetMaterial(4, DynamicShader[8]);
-		SecondMeshComponent->SetMaterial(4, DynamicShader[9]);
-
-		DynamicShader[8]->SetScalarParameterValue("Amount", 0.6f);
-		DynamicShader[8]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[8]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[8]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[8]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-		DynamicShader[8]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-		DynamicShader[9]->SetScalarParameterValue("Amount", 0.6f);
-		DynamicShader[9]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[9]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[9]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[9]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-		DynamicShader[9]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+		EvolEffect->SetTemplate(P_EVOL.Object);
+		EvolEffect->bAutoActivate = false;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> EVOLUTION_THIRDUP_MATERIAL(TEXT("MaterialInstanceConstant'/Game/Animations/Wolf3Build/Material/M_Wolf3EvolutionMat_Up_Inst.M_Wolf3EvolutionMat_Up_Inst'"));
-	if (EVOLUTION_THIRDUP_MATERIAL.Succeeded()) {
-
-		GetMesh()->SetMaterial(5, EVOLUTION_THIRDUP_MATERIAL.Object);
-		SecondMeshComponent->SetMaterial(5, EVOLUTION_THIRDUP_MATERIAL.Object);
-
-		Mat.Add(GetMesh()->GetMaterial(5));
-
-
-		DynamicShader.Add(GetMesh()->CreateDynamicMaterialInstance(5, Mat[5]));
-		DynamicShader.Add(SecondMeshComponent->CreateDynamicMaterialInstance(5, Mat[5]));
-
-		GetMesh()->SetMaterial(5, DynamicShader[10]);
-		SecondMeshComponent->SetMaterial(5, DynamicShader[11]);
-
-
-		DynamicShader[10]->SetScalarParameterValue("Amount", 0.6f);
-		DynamicShader[10]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[10]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[10]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[10]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-		DynamicShader[10]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
-
-		DynamicShader[11]->SetScalarParameterValue("Amount", 0.6f);
-		DynamicShader[11]->SetScalarParameterValue("EmissiveAmount", 150.0f);
-		DynamicShader[11]->SetScalarParameterValue("Fringe", 40.0f);
-		DynamicShader[11]->SetScalarParameterValue("Offset", 3.5f);
-		DynamicShader[11]->SetScalarParameterValue("TransitionTime", 3.0f);
-
-		DynamicShader[11]->SetVectorParameterValue("GlowColor", FLinearColor::FLinearColor(0.2f, 0.3f, 0.8f));
+	static ConstructorHelpers::FClassFinder<UUserWidget> HPWIDGET(TEXT("WidgetBlueprint'/Game/ProjectOneBlueprint/UI_EnemyHPBar.UI_EnemyHPBar_C'"));
+	if (HPWIDGET.Succeeded())
+	{
+		HPBarWidgetComponent->SetWidgetClass(HPWIDGET.Class);
+		HPBarWidgetComponent->SetupAttachment(RootComponent);
+		HPBarWidgetComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 70.0f));
+		HPBarWidgetComponent->SetDrawSize(FVector2D(200.0f, 10.0f));
 	}
-
 
 
 	GetMesh()->SetRelativeScale3D(FVector(0.7f, 0.7f, 0.7f));
-	SecondMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -42.0f));
-	SecondMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-
-}
-
-void AAICharacter::Evolution()
-{
-
-	if (IsAlive) {
-		switch (CurLevel) {
-		case 0:
-			SecondMeshComponent->SetVisibility(true);
-			/* 여기에 변화하는 코드 추가 */
-		/*	SecondMeshComponent->SetAnimInstanceClass(SecondAnimIns);
-
-			APAnim = Cast<UPlayerCharacterAnimInstance>(SecondMeshComponent->GetAnimInstance());
-			GetCapsuleComponent()->SetCapsuleSize(35.0f, 70.0f);
-
-			SecondMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
-			SecondMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-
-			CameraBoom->SocketOffset = FVector(100.0f, 50.0f, 90.0f);
-			SetActorScale3D(FVector(1.0f, 1.0f, 1.0f));*/
-
-			/*종료되면 첫번째 스켈레탈 메쉬는 가리고 세 번째 메쉬를 로드시킴*/
-			APAnim = Cast<UPlayerCharacterAnimInstance>(SecondMeshComponent->GetAnimInstance());
-			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AAICharacter::SetAmount, 0.01f, true);
-			break;
-		case 1:
-			GetMesh()->SetVisibility(true);
-
-			/*SecondMeshComponent->SetAnimInstanceClass(SecondAnimIns);
-			APAnim = Cast<UPlayerCharacterAnimInstance>(SecondMeshComponent->GetAnimInstance());
-
-			SecondMeshComponent->SetVisibility(true);
-
-			GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));*/
-			APAnim = Cast<UPlayerCharacterAnimInstance>(GetMesh()->GetAnimInstance());
-			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AAICharacter::SetAmount, 0.01f, true);
-			break;
-		case 2:
-
-			SecondMeshComponent->SetSkeletalMesh(SecondSkMesh);
-
-
-			SecondMeshComponent->SetAnimInstanceClass(SecondAnimIns);
-
-			APAnim = Cast<UPlayerCharacterAnimInstance>(SecondMeshComponent->GetAnimInstance());
-
-			GetCapsuleComponent()->SetCapsuleSize(35.0f, 70.0f);
-
-			GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
-			GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-
-			SecondMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
-			SecondMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-
-			CameraBoom->SocketOffset = FVector(100.0f, 50.0f, 90.0f);
-
-			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AAICharacter::SetAmount, 0.01f, true);
-			break;
-
-		case 3:
-
-			GetMesh()->SetAnimInstanceClass(SecondAnimIns);
-			GetMesh()->SetSkeletalMesh(SecondSkMesh);
-
-			GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -70.0f));
-			GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-
-			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AAICharacter::SetAmount, 0.01f, true);
-			break;
-
-		case 4:
-			SecondMeshComponent->SetRelativeScale3D(FVector(1.3f, 1.3f, 1.3f));
-			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AAICharacter::SetAmount, 0.01f, true);
-
-			break;
-
-		case 5:
-			GetMesh()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
-			GetMesh()->SetSkeletalMesh(ThirdMesh);
-
-			GetWorld()->GetTimerManager().SetTimer(EvolutionTimer, this, &AAICharacter::SetAmount, 0.01f, true);
-			break;
-		}
-	}
-
-}
-
-void AAICharacter::SetAmount()
-{
-	switch (CurLevel)
-	{
-	case 0:
-		if (curAmount < 1.0f || 0.0f < SecCurAmount) {
-			curAmount += 0.01f;
-			SecCurAmount -= 0.01f;
-
-			if (curAmount > 1.0f)
-				curAmount = 1.0f;
-
-			if (SecCurAmount < 0.0f)
-				SecCurAmount = 0.0f;
-
-			SetScalarParameter(GetMesh(), 0, 0, curAmount);
-			SetScalarParameter(GetMesh(), 1, 0, curAmount);
-			SetScalarParameter(GetMesh(), 2, 0, curAmount);
-			SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
-			SetScalarParameter(SecondMeshComponent, 1, 0, SecCurAmount);
-			SetScalarParameter(SecondMeshComponent, 2, 0, SecCurAmount);
-		}
-		else {
-
-			++CurLevel;
-
-			GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
-
-			GetMesh()->SetRelativeScale3D(FVector(1.2f, 1.2f, 1.2f));
-
-			curAmount = 0.5;
-			Hp = 150.0f;
-			MaxHp = 150.0f;
-		}
-		break;
-	case 1:
-		if (curAmount > 0.0f || SecCurAmount < 1.0f) {
-			curAmount -= 0.01f;
-			SecCurAmount += 0.01f;
-
-			if (curAmount < 0.0f)
-				curAmount = 0.0f;
-
-			if (SecCurAmount > 1.0f)
-				SecCurAmount = 1.0f;
-
-			SetScalarParameter(GetMesh(), 0, 0, curAmount);
-			SetScalarParameter(GetMesh(), 1, 0, curAmount);
-			SetScalarParameter(GetMesh(), 2, 0, curAmount);
-			SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
-			SetScalarParameter(SecondMeshComponent, 1, 0, SecCurAmount);
-			SetScalarParameter(SecondMeshComponent, 2, 0, SecCurAmount);
-		}
-		else {
-			//APAnim->Evolution();
-
-			++CurLevel;
-
-			SecCurAmount = 0.5;
-
-			SetScalarParameter(SecondMeshComponent, 3, 0, SecCurAmount);
-			SetScalarParameter(SecondMeshComponent, 4, 0, 1.0f);
-			SetScalarParameter(SecondMeshComponent, 5, 0, 1.0f);
-
-			SecondMeshComponent->SetMaterial(0, SecondMeshComponent->GetMaterial(3));
-			SecondMeshComponent->SetMaterial(1, SecondMeshComponent->GetMaterial(4));
-			SecondMeshComponent->SetMaterial(2, SecondMeshComponent->GetMaterial(5));
-
-
-			Hp = 200.0f;
-			MaxHp = 200.0f;
-			GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
-
-			//GetMesh()->SetSkeletalMesh(ThirdMesh);
-			//Weapone->IntervalTime = 0.06f;
-
-		}
-		break;
-
-	case 2:
-		if (curAmount < 1.0f || 0.0f < SecCurAmount)
-		{
-			curAmount += 0.01f;
-			SecCurAmount -= 0.01f;
-
-			if (curAmount > 1.0f)
-				curAmount = 1.0f;
-
-			if (SecCurAmount < 0.0f)
-				SecCurAmount = 0.0f;
-
-			SetScalarParameter(GetMesh(), 0, 0, curAmount);
-			SetScalarParameter(GetMesh(), 1, 0, curAmount);
-			SetScalarParameter(GetMesh(), 2, 0, curAmount);
-			SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
-		}
-		else {
-
-			++CurLevel;
-			curAmount = 0.5f;
-
-			SetScalarParameter(GetMesh(), 3, 0, curAmount);
-			SetScalarParameter(GetMesh(), 4, 0, 1.0f);
-			SetScalarParameter(GetMesh(), 5, 0, 1.0f);
-
-			GetMesh()->SetMaterial(0, GetMesh()->GetMaterial(3));
-			GetMesh()->SetMaterial(1, GetMesh()->GetMaterial(4));
-			GetMesh()->SetMaterial(2, GetMesh()->GetMaterial(5));
-
-			Hp = 250.0f;
-			MaxHp = 250.0f;
-			Weapone->IntervalTime = 0.06f;
-			GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
-		}
-		break;
-
-	case 3:
-		if (curAmount > 0.0f || SecCurAmount < 1.0f) {
-			curAmount -= 0.01f;
-			SecCurAmount += 0.01f;
-
-			if (curAmount < 0.0f)
-				curAmount = 0.0f;
-
-			if (SecCurAmount > 1.0f)
-				SecCurAmount = 1.0f;
-
-			SetScalarParameter(GetMesh(), 0, 0, curAmount);
-			SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
-
-		}
-		else
-		{
-			++CurLevel;
-			SecCurAmount = 0.5;
-
-			Hp = 300.0f;
-			MaxHp = 300.0f;
-
-			GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
-		}
-		break;
-
-	case 4:
-		if (curAmount < 1.0f || 0.0f < SecCurAmount)
-		{
-			curAmount += 0.01f;
-			SecCurAmount -= 0.01f;
-
-			if (curAmount > 1.0f)
-				curAmount = 1.0f;
-
-			if (SecCurAmount < 0.0f)
-				SecCurAmount = 0.0f;
-
-			SetScalarParameter(GetMesh(), 0, 0, curAmount);
-			SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
-		}
-		else {
-			++CurLevel;
-			curAmount = 0.6;
-
-			Hp = 350.0f;
-			MaxHp = 350.0f;
-
-			SetScalarParameter(GetMesh(), 0, 0, curAmount);
-			SetScalarParameter(GetMesh(), 1, 0, curAmount);
-
-			GetMesh()->SetMaterial(0, GetMesh()->GetMaterial(1));
-			GetMesh()->SetMaterial(1, GetMesh()->GetMaterial(2));
-
-			GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
-		}
-		break;
-
-	case 5:
-		if (curAmount > 0.0f || SecCurAmount < 1.0f) {
-			curAmount -= 0.01f;
-			SecCurAmount += 0.01f;
-
-			if (curAmount < 0.0f)
-				curAmount = 0.0f;
-
-			if (SecCurAmount > 1.0f)
-				SecCurAmount = 1.0f;
-
-			SetScalarParameter(GetMesh(), 0, 0, curAmount);
-			SetScalarParameter(GetMesh(), 1, 0, curAmount);
-			SetScalarParameter(SecondMeshComponent, 0, 0, SecCurAmount);
-
-		}
-		else {
-			++CurLevel;
-
-			Hp = 400.0f;
-			MaxHp = 400.0f;
-			GetWorld()->GetTimerManager().ClearTimer(EvolutionTimer);
-		}
-
-		break;
-	}
-
-}
-
-void AAICharacter::SetWidget(UUserWidget * widget)
-{
-	HPBarWidgetComponent->SetWidget(widget);
-	HPBarWidgetComponent->SetDrawSize(FVector2D(200.0f, 10.0f));
+	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -45.0f));
+	CameraBoom->SocketOffset = FVector(240.0f, 40.0f, 50.0f);
+	GetMesh()->SetRelativeScale3D(FVector(0.7f));
 }
 
 void AAICharacter::PostInitializeComponents()
@@ -1858,14 +1347,14 @@ AAICharacter::AAICharacter()
 
 
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> AI_MESH(TEXT("SkeletalMesh'/Game/Animations/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
+	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> AI_MESH(TEXT("SkeletalMesh'/Game/Animations/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
 
-	if (AI_MESH.Succeeded())
-		GetMesh()->SetSkeletalMesh(AI_MESH.Object);
+	//if (AI_MESH.Succeeded())
+	//	GetMesh()->SetSkeletalMesh(AI_MESH.Object);
 
-	static ConstructorHelpers::FClassFinder<UPlayerCharacterAnimInstance> AI_ANI(TEXT("AnimBlueprint'/Game/Animations/AnimationBlueprint/PlayerCharacter_AnimBP.PlayerCharacter_AnimBP_C'"));
-	if (AI_ANI.Succeeded())
-		GetMesh()->SetAnimInstanceClass(AI_ANI.Class);
+	//static ConstructorHelpers::FClassFinder<UPlayerCharacterAnimInstance> AI_ANI(TEXT("AnimBlueprint'/Game/Animations/AnimationBlueprint/PlayerCharacter_AnimBP.PlayerCharacter_AnimBP_C'"));
+	//if (AI_ANI.Succeeded())
+	//	GetMesh()->SetAnimInstanceClass(AI_ANI.Class);
 
 	//GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -1886,7 +1375,7 @@ AAICharacter::AAICharacter()
 
 
 
-	GetMesh()->SetWorldRotation(FRotator(0.0f, 270.0f,0.0f ));
+	GetMesh()->SetWorldRotation(FRotator(0.0f, 270.0f, 0.0f));
 	GetMesh()->SetWorldLocation(FVector(0.0f, 0.0, -97.0f));
 
 
@@ -1909,7 +1398,7 @@ AAICharacter::AAICharacter()
 	DirectionVec = MoveVec::ForwardVec;
 	FirstCheck = false;
 
-	Hp = 200.0f;
+	CharacterStat->CurHP = 200.0f;
 	HPBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarWidgetComponent"));
 
 	HPBarWidgetComponent->SetupAttachment(GetCapsuleComponent());

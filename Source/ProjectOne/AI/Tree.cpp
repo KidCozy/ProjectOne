@@ -28,7 +28,7 @@ ATree::ATree()
 
 	RootComponent = Pivot;
 
-	Mesh->AttachTo(RootComponent);
+	Mesh->SetupAttachment(RootComponent);
 
 	RootComponent->SetMobility(EComponentMobility::Static);
 	Mesh->SetMobility(EComponentMobility::Static);

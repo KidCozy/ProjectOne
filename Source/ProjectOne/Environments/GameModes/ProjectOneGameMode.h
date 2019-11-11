@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "ProjectOne.h"
 #include "GameFramework/GameModeBase.h"
 #include "ProjectOneGameMode.generated.h"
 
@@ -13,6 +13,7 @@ class AProjectOneGameMode : public AGameModeBase
 
 public:
 	AProjectOneGameMode();
+
 };
 
 

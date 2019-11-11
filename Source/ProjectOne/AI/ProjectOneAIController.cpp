@@ -44,7 +44,6 @@ void AProjectOneAIController::BeginPlay()
 void AProjectOneAIController::Possess(APawn * InPawn)
 {
 	Super::Possess(InPawn);
-
 }
 
 

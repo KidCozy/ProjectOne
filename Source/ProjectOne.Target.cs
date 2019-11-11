@@ -9,5 +9,7 @@ public class ProjectOneTarget : TargetRules
 	{
 		Type = TargetType.Game;
 		ExtraModuleNames.Add("ProjectOne");
-	}
+        //this.bForceEnableExceptions = true;
+        //BuildEnvironment = TargetBuildEnvironment.Unique;
+    }
 }

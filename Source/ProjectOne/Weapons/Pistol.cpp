@@ -15,7 +15,7 @@ AWeapon::AWeapon()
 
 	MaxBulletCount = 100;
 	CurBulletCount = 100;
-	Spread = 1.0f;
+	Spread = 2.0f;
 	IntervalTime = 0.2f;
 	Range = 100.0f;
 	VerticalRecoil = 0.15f;
@@ -52,7 +52,6 @@ void AWeapon::Tick(float DeltaTime)
 void AWeapon::Shot(FVector SpawnPos, FRotator Direction, FVector Nolmal)
 {
 	if (CurBulletCount > 0) {
-
 		auto Bullet = GetWorld()->SpawnActor<ABullet>(SpawnPos, Direction);
 		if (Bullet != NULL) {
 			Bullet->SetDirection(Direction.Vector().GetSafeNormal());

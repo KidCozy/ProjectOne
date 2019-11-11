@@ -16,7 +16,4 @@ class PROJECTONE_API AWolfCharacter : public AProjectOneCharacter
 public:
 	AWolfCharacter();
 	void SetResources() override;
-protected:
-	void Evolution() override;
-	void SetAmount() override;
 };

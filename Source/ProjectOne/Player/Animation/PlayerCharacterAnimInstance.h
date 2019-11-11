@@ -38,9 +38,6 @@ public:
 	UAnimMontage* ReloadMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly)
-	UAnimMontage* SecondShotMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadonly)
 	UAnimMontage* F_RollMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly)
@@ -58,7 +55,11 @@ public:
 	UPlayerCharacterAnimInstance();
 
 	virtual void Evolution();
+
+	void RollBackMontage();
+
 private:
+
 	UFUNCTION()
 	void AnimNotify_RollEnd();
 
@@ -67,6 +68,9 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_ReloadEnd();
+
+	UFUNCTION()
+	void AnimNotify_Shootable();
 
 protected:
 	virtual void SetMontage();

@@ -2,39 +2,18 @@
 
 #pragma once
 
-#include "ProjectOne.h"
-#include "GameFramework/Actor.h"
+#include "CoreMinimal.h"
+#include "Item/SuperItem.h"
 #include "EvolutionItem.generated.h"
 
+/**
+ * 
+ */
 UCLASS()
-class PROJECTONE_API AEvolutionItem : public AActor
+class PROJECTONE_API AEvolutionItem : public ASuperItem
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+public:
 	AEvolutionItem();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-
-	UPROPERTY(VisibleAnywhere, Category = Col)
-	USphereComponent * Col;
-
-	UPROPERTY(VisibleAnywhere, Category = Mesh)
-	UStaticMeshComponent * Mesh;
-
-	UFUNCTION()
-	void OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OherCcomp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
-	void Drop();
-
-	int ItemNum;
-
+	void Use() override;
 };

@@ -36,8 +36,6 @@ public:
 	AAICharacter();
 
 	void SetResources() override;
-	void Evolution() override;
-	void SetAmount() override;
 
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float delta) override;
@@ -123,7 +121,6 @@ public:
 
 	float GetLandPosZ(float PosX,float PosY);
 
-	UFUNCTION(BlueprintCallable)
-	void SetWidget(UUserWidget* widget);
+
 };
 

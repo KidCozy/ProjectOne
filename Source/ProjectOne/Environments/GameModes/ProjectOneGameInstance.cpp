@@ -20,7 +20,7 @@ UProjectOneGameInstance::UProjectOneGameInstance(const FObjectInitializer& Objec
 	CharacterTable = DT_CHARACTER.Object;
 	ABCHECK(CharacterTable->GetRowMap().Num() > 0);
 
-	FString WeaponeDataPath = TEXT("DataTable'/Game/Data/Weapone.Weapone'");
+	FString WeaponeDataPath = TEXT("DataTable'/Game/Data/Weapon.Weapon'");
 	static ConstructorHelpers::FObjectFinder<UDataTable> DT_WEAPONE(*WeaponeDataPath);
 	ABCHECK(DT_WEAPONE.Succeeded());
 	WeaponeTable = DT_WEAPONE.Object;
@@ -58,3 +58,13 @@ void UProjectOneGameInstance::HitShake(TSubclassOf<UCameraShake> CShake, float S
 
 
 }
+//
+//E_PlayerSelect UProjectOneGameInstance::GetPlayerType()
+//{
+//	return PlayerType;
+//}
+//
+//void UProjectOneGameInstance::SetPlayerType(E_PlayerSelect playerType)
+//{
+//	PlayerType = playerType;
+//}

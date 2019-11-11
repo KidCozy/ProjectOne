@@ -10,8 +10,8 @@ UCLASS()
 class PROJECTONE_API ABullet : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+	public:
 	// Sets default values for this actor's properties
 	ABullet();
 
@@ -22,7 +22,8 @@ public:
 
 	FVector Normal;
 
-public:	
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -35,15 +36,12 @@ public:
 	//void RayCheckFunc();
 	/*UFUNCTION()
 	void OnCollisionOverlap(UPrimitiveComponent * OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OherCcomp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-*/
+ */
 	void SetDirection(FVector direction);
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = Col)
 	USphereComponent * Col;
-
-	UPROPERTY(VisibleAnywhere, Category = Mesh)
-	UStaticMeshComponent * Mesh;
 
 	UPROPERTY(VisibleAnywhere, Category = MoveMent)
 	UProjectileMovementComponent * ProjectileMovement;
@@ -54,16 +52,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Matareal)
 	UMaterialInstanceDynamic * Materialinstance;
 
-
-	UPROPERTY(EditAnywhere, Category = Scratch)
-	UMaterialInstance * DecalMaterialinstance;
-
-
 	UPROPERTY(EditAnywhere, Category = Scratch)
 	UParticleSystemComponent* Trail;
 
-	//UPROPERTY(VisibleAnywhere, Category = Matareal)
-	//UDecalComponent * DecalMaterialinstance;
+	UPROPERTY(EditAnywhere, Category = Scratch)
+	UParticleSystemComponent* Hit;
+
+	UPROPERTY(VisibleAnywhere, Category = Sound)
+	class UPOPlayerAkComponent* SoundManager;
+
+	UPROPERTY(VisibleAnywhere, Category = Matareal)
+	UMaterialInstance * DecalMaterialinstance;
+
+	class AExplosion* Explosion;
 
 	//FTimerHandle RayCheckTimer;
 	FVector PreLocation;
@@ -71,4 +72,6 @@ protected:
 	float LifeTime;
 
 	bool isStartRay;
+	//월샷 없애기 용
+	bool isHit;
 };
